@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Plus, LogOut, Filter, Download, Upload, Star, Grid, List, Eye, EyeOff, Copy, Edit2, Trash2, ExternalLink, Check, FileText, StickyNote, Menu, Lock, ChevronLeft, ChevronRight, X, Shield } from 'lucide-react';
+import { Search, Plus, LogOut, Filter, Download, Upload, Star, Grid, List, Eye, EyeOff, Copy, Edit2, Trash2, ExternalLink, Check, FileText, StickyNote, Menu, Lock, ChevronLeft, ChevronRight, X, Shield, Brain } from 'lucide-react';
 import { PasswordCard } from './PasswordCard';
 import { PasswordModal } from './PasswordModal';
 import { NotesModal } from './NotesModal';
