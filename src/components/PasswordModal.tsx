@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { X, Eye, EyeOff, Save, RefreshCw } from 'lucide-react';
 import { PasswordEntry, Category } from '../types';
 import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
+import { SmartPasswordGenerator } from './SmartPasswordGenerator';
+import { SmartCategorySelector } from './SmartCategorySelector';
 
 interface PasswordModalProps {
   isOpen: boolean;
@@ -33,6 +35,7 @@ export const PasswordModal: React.FC<PasswordModalProps> = ({
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showAIGenerator, setShowAIGenerator] = useState(false);
 
   const generatePassword = () => {
     const length = 16;
@@ -134,17 +137,13 @@ export const PasswordModal: React.FC<PasswordModalProps> = ({
                 <label className="block text-sm font-semibold text-gray-300 mb-2">
                   Category
                 </label>
-                <select
-                  value={formData.category}
-                  onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-600 rounded-2xl focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent bg-gray-900/50 backdrop-blur-sm text-white"
-                >
-                  {categories.map(category => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
+                <SmartCategorySelector
+                  categories={categories}
+                  selectedCategory={formData.category}
+                  onCategoryChange={(categoryId) => setFormData(prev => ({ ...prev, category: categoryId }))}
+                  title={formData.title}
+                  url={formData.url}
+                />
               </div>
 
               <div>
@@ -187,14 +186,23 @@ export const PasswordModal: React.FC<PasswordModalProps> = ({
                     </div>
                   )}
                 </div>
-                <button
-                  type="button"
-                  onClick={generatePassword}
-                  className="flex items-center space-x-1 px-3 py-1 text-xs text-cyan-400 hover:text-cyan-300 bg-cyan-500/20 hover:bg-cyan-500/30 rounded-xl transition-colors font-medium"
-                >
-                  <RefreshCw className="w-3 h-3" />
-                  <span>Generate Password</span>
-                </button>
+                <div className="flex items-center space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowAIGenerator(!showAIGenerator)}
+                    className="flex items-center space-x-1 px-3 py-1 text-xs text-purple-400 hover:text-purple-300 bg-purple-500/20 hover:bg-purple-500/30 rounded-xl transition-colors font-medium"
+                  >
+                    <span>AI Generator</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={generatePassword}
+                    className="flex items-center space-x-1 px-3 py-1 text-xs text-cyan-400 hover:text-cyan-300 bg-cyan-500/20 hover:bg-cyan-500/30 rounded-xl transition-colors font-medium"
+                  >
+                    <RefreshCw className="w-3 h-3" />
+                    <span>Quick Generate</span>
+                  </button>
+                </div>
               </div>
               <div className="relative">
                 <input
@@ -213,6 +221,16 @@ export const PasswordModal: React.FC<PasswordModalProps> = ({
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
+              
+              {/* AI Password Generator */}
+              {showAIGenerator && (
+                <div className="mt-4">
+                  <SmartPasswordGenerator
+                    title={formData.title}
+                    onPasswordGenerated={(password) => setFormData(prev => ({ ...prev, password }))}
+                  />
+                </div>
+              )}
             </div>
 
             <div>
