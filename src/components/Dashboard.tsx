@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Plus, LogOut, Filter, Download, Upload, Star, Grid, List, Eye, EyeOff, Copy, Edit2, Trash2, ExternalLink, Check, FileText, StickyNote, Menu, Lock } from 'lucide-react';
+import { Search, Plus, LogOut, Filter, Download, Upload, Star, Grid, List, Eye, EyeOff, Copy, Edit2, Trash2, ExternalLink, Check, FileText, StickyNote, Menu, Lock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { PasswordCard } from './PasswordCard';
 import { PasswordModal } from './PasswordModal';
 import { NotesModal } from './NotesModal';
@@ -365,11 +365,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
       <div className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-gray-800 shadow-lg border-r border-gray-700 flex flex-col transition-all duration-300`}>
         {/* Header */}
         <div className="p-6 border-b border-gray-700">
-          <div className="flex items-center justify-between">
-            <div className={`flex items-center space-x-3 ${sidebarCollapsed ? 'justify-center' : ''}`}>
+          <div className="flex flex-col items-center">
+            <div className="flex items-center justify-center mb-4">
               {!sidebarCollapsed && (
                 <>
-                  <div className="w-10 h-10 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center mr-3">
                     <span className="text-white font-bold text-sm">VG</span>
                   </div>
                   <h1 className="text-xl font-bold text-white">VaultGuard</h1>
@@ -383,10 +383,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </div>
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="p-2 text-gray-400 hover:text-gray-300 hover:bg-gray-700 rounded-lg transition-colors flex-shrink-0"
+              className="p-2 text-gray-400 hover:text-gray-300 hover:bg-gray-700 rounded-lg transition-colors"
               title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             >
-              <Menu className="w-5 h-5" />
+              {sidebarCollapsed ? (
+                <ChevronRight className="w-5 h-5" />
+              ) : (
+                <ChevronLeft className="w-5 h-5" />
+              )}
             </button>
           </div>
         </div>
