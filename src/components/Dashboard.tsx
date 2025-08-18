@@ -1002,6 +1002,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
         editingNote={editingNote}
         loading={loading}
       />
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={handleCloseAuthModal}
+        onSave={handleSaveAuth}
+        onUpdate={handleUpdateAuth}
+        editingAuth={editingAuth}
+        loading={loading}
+      />
     </div>
   );
 };
