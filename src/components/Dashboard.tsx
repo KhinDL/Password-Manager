@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Plus, LogOut, Filter, Download, Upload, Star, Grid, List, Eye, EyeOff, Copy, Edit2, Trash2, ExternalLink, Check, FileText, StickyNote, Menu, Lock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Plus, LogOut, Filter, Download, Upload, Star, Grid, List, Eye, EyeOff, Copy, Edit2, Trash2, ExternalLink, Check, FileText, StickyNote, Menu, Lock, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { PasswordCard } from './PasswordCard';
 import { PasswordModal } from './PasswordModal';
 import { NotesModal } from './NotesModal';
@@ -380,6 +380,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 </div>
               )}
           </div>
+        </div>
 
         {/* Tabs */}
         <div className={`p-4 border-b border-gray-700 ${sidebarCollapsed ? 'px-2' : ''}`}>
@@ -506,7 +507,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
         {/* Footer */}
         <div className={`p-4 border-t border-gray-700 ${sidebarCollapsed ? 'px-2' : ''}`}>
-          <div className={`flex items-center ${sidebarCollapsed ? 'flex-col space-y-2' : 'justify-between'} mb-3`}>
+          <div className={`flex items-center ${sidebarCollapsed ? 'flex-col space-y-2' : 'justify-between'}`}>
             <button
               onClick={exportPasswords}
               className="p-2 text-gray-400 hover:text-gray-300 hover:bg-gray-700 rounded-lg transition-colors"
@@ -520,21 +521,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
               title={sidebarCollapsed ? "Logout" : "Logout"}
             >
               <LogOut className="w-5 h-5" />
-            </button>
-          </div>
-          
-          {/* Chevron Toggle Button */}
-          <div className="flex justify-center">
-            <button
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="p-2 text-gray-400 hover:text-gray-300 hover:bg-gray-700 rounded-lg transition-colors"
-              title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            >
-              {sidebarCollapsed ? (
-                <ChevronRight className="w-5 h-5" />
-              ) : (
-                <ChevronLeft className="w-5 h-5" />
-              )}
             </button>
           </div>
         </div>
