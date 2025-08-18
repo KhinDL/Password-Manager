@@ -1220,7 +1220,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
         onSave={handleSaveAuth}
         onUpdate={handleUpdateAuth}
         editingAuth={editingAuth}
-  Shield,
         loading={loading}
       />
     </div>
