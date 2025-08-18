@@ -1,8 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Plus, LogOut, Filter, Download, Upload, Star } from 'lucide-react';
+import { Search, Plus, LogOut, Filter, Download, Upload, Star, Grid, List, Eye, EyeOff, Copy, Edit2, Trash2, ExternalLink, Check } from 'lucide-react';
 import { PasswordCard } from './PasswordCard';
 import { PasswordModal } from './PasswordModal';
 import { PasswordEntry, Category } from '../types';
+import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
+import * as LucideIcons from 'lucide-react';
 
 interface DashboardProps {
   passwords: PasswordEntry[];
@@ -28,6 +30,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPassword, setEditingPassword] = useState<PasswordEntry | undefined>();
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [selectedPassword, setSelectedPassword] = useState<PasswordEntry | null>(null);
+  const [showPasswords, setShowPasswords] = useState<{[key: string]: boolean}>({});
+  const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const filteredPasswords = useMemo(() => {
     return passwords.filter(password => {
@@ -59,6 +65,23 @@ export const Dashboard: React.FC<DashboardProps> = ({
     }
   };
 
+  const copyToClipboard = async (text: string, fieldName: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedField(fieldName);
+      setTimeout(() => setCopiedField(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+    }
+  };
+
+  const togglePasswordVisibility = (id: string) => {
+    setShowPasswords(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
+
   const exportPasswords = () => {
     const dataStr = JSON.stringify(passwords, null, 2);
     const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
@@ -78,192 +101,458 @@ export const Dashboard: React.FC<DashboardProps> = ({
     return { total, favorites, weak, strong };
   }, [passwords]);
 
+  const renderPasswordRow = (password: PasswordEntry) => {
+    const category = categories.find(c => c.id === password.category) || categories[0];
+    const IconComponent = (LucideIcons as any)[category.icon] || LucideIcons.Folder;
+    const isPasswordVisible = showPasswords[password.id];
+
+    return (
+      <tr 
+        key={password.id}
+        className={`border-b border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors ${
+          selectedPassword?.id === password.id ? 'bg-blue-50' : ''
+        }`}
+        onClick={() => setSelectedPassword(password)}
+      >
+        <td className="px-6 py-4">
+          <div className="flex items-center space-x-3">
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm"
+              style={{ backgroundColor: category.color }}
+            >
+              <IconComponent className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <span className="font-medium text-gray-900">{password.title}</span>
+                {password.isFavorite && (
+                  <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                )}
+              </div>
+              <span className="text-sm text-gray-500">{category.name}</span>
+            </div>
+          </div>
+        </td>
+        <td className="px-6 py-4 text-gray-900 font-mono text-sm">
+          {password.username}
+        </td>
+        <td className="px-6 py-4">
+          <div className="flex items-center space-x-2">
+            <span className="font-mono text-sm text-gray-900">
+              {isPasswordVisible ? password.password : '••••••••'}
+            </span>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                togglePasswordVisibility(password.id);
+              }}
+              className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              {isPasswordVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                copyToClipboard(password.password, `password-${password.id}`);
+              }}
+              className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              {copiedField === `password-${password.id}` ? (
+                <Check className="w-4 h-4 text-green-600" />
+              ) : (
+                <Copy className="w-4 h-4" />
+              )}
+            </button>
+          </div>
+        </td>
+        <td className="px-6 py-4">
+          <PasswordStrengthIndicator password={password.password} />
+        </td>
+        <td className="px-6 py-4">
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleToggleFavorite(password.id);
+              }}
+              className={`p-1 rounded transition-colors ${
+                password.isFavorite
+                  ? 'text-yellow-500 hover:text-yellow-600'
+                  : 'text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              <Star className={`w-4 h-4 ${password.isFavorite ? 'fill-current' : ''}`} />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEditPassword(password);
+              }}
+              className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <Edit2 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDeletePassword(password.id);
+              }}
+              className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        </td>
+      </tr>
+    );
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-black">
-      {/* Header */}
-      <header className="bg-gray-800/80 backdrop-blur-xl shadow-lg border-b border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center transform rotate-12">
-                <span className="text-white font-bold text-sm">VG</span>
-              </div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">VaultGuard</h1>
+    <div className="min-h-screen bg-gray-100 flex">
+      {/* Sidebar */}
+      <div className="w-64 bg-white shadow-lg border-r border-gray-200 flex flex-col">
+        {/* Header */}
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">VG</span>
             </div>
+            <h1 className="text-xl font-bold text-gray-900">VaultGuard</h1>
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <div className="flex-1 p-4">
+          <div className="space-y-2">
+            <button
+              onClick={() => setSelectedCategory('all')}
+              className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center space-x-3 ${
+                selectedCategory === 'all'
+                  ? 'bg-blue-100 text-blue-700 font-medium'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <div className="w-6 h-6 bg-gray-500 rounded flex items-center justify-center">
+                <span className="text-white text-xs font-bold">{stats.total}</span>
+              </div>
+              <span>All Items</span>
+            </button>
+
+            <button
+              onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+              className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center space-x-3 ${
+                showFavoritesOnly
+                  ? 'bg-yellow-100 text-yellow-700 font-medium'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <div className="w-6 h-6 bg-yellow-500 rounded flex items-center justify-center">
+                <Star className="w-3 h-3 text-white fill-current" />
+              </div>
+              <span>Favorites</span>
+              <span className="ml-auto text-sm text-gray-500">{stats.favorites}</span>
+            </button>
+
+            <div className="pt-4 pb-2">
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3">Categories</h3>
+            </div>
+
+            {categories.map(category => {
+              const IconComponent = (LucideIcons as any)[category.icon] || LucideIcons.Folder;
+              const count = passwords.filter(p => p.category === category.id).length;
+              
+              return (
+                <button
+                  key={category.id}
+                  onClick={() => setSelectedCategory(category.id)}
+                  className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center space-x-3 ${
+                    selectedCategory === category.id
+                      ? 'bg-blue-100 text-blue-700 font-medium'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <div
+                    className="w-6 h-6 rounded flex items-center justify-center text-white"
+                    style={{ backgroundColor: category.color }}
+                  >
+                    <IconComponent className="w-3 h-3" />
+                  </div>
+                  <span>{category.name}</span>
+                  <span className="ml-auto text-sm text-gray-500">{count}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="p-4 border-t border-gray-200">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={exportPasswords}
+              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Export passwords"
+            >
+              <Download className="w-5 h-5" />
+            </button>
+            <button
+              onClick={onLogout}
+              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Logout"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
+        {/* Top Bar */}
+        <div className="bg-white shadow-sm border-b border-gray-200 p-4">
+          <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <button
-                onClick={exportPasswords}
-                disabled={loading}
-                className="p-3 text-gray-300 hover:text-white hover:bg-gray-700 rounded-xl transition-all duration-200 hover:scale-105"
-                title="Export passwords"
-              >
-                <Download className="w-5 h-5" />
-              </button>
-              <button
-                onClick={onLogout}
-                className="p-3 text-gray-300 hover:text-white hover:bg-gray-700 rounded-xl transition-all duration-200 hover:scale-105"
-                title="Logout"
-              >
-                <LogOut className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-gray-700 hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-gray-300">Total Passwords</p>
-                <p className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">{stats.total}</p>
-              </div>
-              <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-2xl flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold">{stats.total}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-gray-700 hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-gray-300">Favorites</p>
-                <p className="text-3xl font-bold text-yellow-400">{stats.favorites}</p>
-              </div>
-              <div className="w-12 h-12 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg">
-                <Star className="w-5 h-5 text-white" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-gray-700 hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-gray-300">Weak Passwords</p>
-                <p className="text-3xl font-bold text-red-400">{stats.weak}</p>
-              </div>
-              <div className="w-12 h-12 bg-gradient-to-r from-red-500 to-red-600 rounded-2xl flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold">!</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-gray-700 hover:shadow-2xl transition-all duration-300 hover:scale-105">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-gray-300">Strong Passwords</p>
-                <p className="text-3xl font-bold text-green-400">{stats.strong}</p>
-              </div>
-              <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold">✓</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Search and Filter Bar */}
-        <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl shadow-xl p-6 mb-8 border border-gray-700">
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div className="flex-1 max-w-md">
               <div className="relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   type="text"
                   placeholder="Search passwords..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 border border-gray-600 rounded-2xl focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent bg-gray-900/50 backdrop-blur-sm transition-all duration-200 text-white placeholder-gray-400"
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-80"
                 />
               </div>
             </div>
 
-            <div className="flex items-center space-x-4">
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="px-4 py-3 border border-gray-600 rounded-2xl focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent bg-gray-900/50 backdrop-blur-sm text-white"
-              >
-                <option value="all">All Categories</option>
-                {categories.map(category => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-
-              <button
-                onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
-                  showFavoritesOnly
-                    ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded-2xl'
-                    : 'bg-gray-700/50 text-gray-300 border border-gray-600 rounded-2xl backdrop-blur-sm'
-                }`}
-              >
-                <Star className={`w-4 h-4 ${showFavoritesOnly ? 'fill-current' : ''}`} />
-                <span className="text-sm">Favorites</span>
-              </button>
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-2 rounded transition-colors ${
+                    viewMode === 'list'
+                      ? 'bg-white text-blue-600 shadow-sm'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <List className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2 rounded transition-colors ${
+                    viewMode === 'grid'
+                      ? 'bg-white text-blue-600 shadow-sm'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <Grid className="w-4 h-4" />
+                </button>
+              </div>
 
               <button
                 onClick={() => setIsModalOpen(true)}
                 disabled={loading}
-                className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-2xl hover:from-cyan-600 hover:to-blue-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
-                <Plus className="w-5 h-5" />
-                <span>{loading ? 'Loading...' : 'Add Password'}</span>
+                <Plus className="w-4 h-4" />
+                <span>Add Password</span>
               </button>
             </div>
           </div>
         </div>
 
-        {/* Password Grid */}
-        {loading ? (
-          <div className="text-center py-16">
-            <div className="w-20 h-20 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl">
-              <div className="w-8 h-8 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
+        {/* Content Area */}
+        <div className="flex-1 flex">
+          {/* Password List */}
+          <div className="flex-1 bg-white">
+            {loading ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="text-center">
+                  <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                  <p className="text-gray-500">Loading passwords...</p>
+                </div>
+              </div>
+            ) : filteredPasswords.length === 0 ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="text-center">
+                  <Search className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No passwords found</h3>
+                  <p className="text-gray-500 mb-4">
+                    {searchTerm || selectedCategory !== 'all' || showFavoritesOnly
+                      ? "Try adjusting your search or filter criteria."
+                      : "Get started by adding your first password."}
+                  </p>
+                  <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Add Password</span>
+                  </button>
+                </div>
+              </div>
+            ) : viewMode === 'list' ? (
+              <div className="overflow-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Name
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Username
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Password
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Strength
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredPasswords.map(renderPasswordRow)}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredPasswords.map((password) => {
+                    const category = categories.find(c => c.id === password.category) || categories[0];
+                    return (
+                      <PasswordCard
+                        key={password.id}
+                        password={password}
+                        category={category}
+                        onEdit={handleEditPassword}
+                        onDelete={onDeletePassword}
+                        onToggleFavorite={handleToggleFavorite}
+                        loading={loading}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Details Panel */}
+          {selectedPassword && viewMode === 'list' && (
+            <div className="w-80 bg-gray-50 border-l border-gray-200 p-6">
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900">Password Details</h3>
+                  <button
+                    onClick={() => setSelectedPassword(null)}
+                    className="p-1 text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                    <p className="text-gray-900">{selectedPassword.title}</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                    <div className="flex items-center space-x-2">
+                      <p className="text-gray-900 font-mono">{selectedPassword.username}</p>
+                      <button
+                        onClick={() => copyToClipboard(selectedPassword.username, 'detail-username')}
+                        className="p-1 text-gray-400 hover:text-gray-600"
+                      >
+                        {copiedField === 'detail-username' ? (
+                          <Check className="w-4 h-4 text-green-600" />
+                        ) : (
+                          <Copy className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <div className="flex items-center space-x-2">
+                      <p className="text-gray-900 font-mono">
+                        {showPasswords[selectedPassword.id] ? selectedPassword.password : '••••••••'}
+                      </p>
+                      <button
+                        onClick={() => togglePasswordVisibility(selectedPassword.id)}
+                        className="p-1 text-gray-400 hover:text-gray-600"
+                      >
+                        {showPasswords[selectedPassword.id] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                      <button
+                        onClick={() => copyToClipboard(selectedPassword.password, 'detail-password')}
+                        className="p-1 text-gray-400 hover:text-gray-600"
+                      >
+                        {copiedField === 'detail-password' ? (
+                          <Check className="w-4 h-4 text-green-600" />
+                        ) : (
+                          <Copy className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Password Strength</label>
+                    <PasswordStrengthIndicator password={selectedPassword.password} />
+                  </div>
+
+                  {selectedPassword.url && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Website</label>
+                      <a
+                        href={selectedPassword.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 hover:underline flex items-center space-x-1"
+                      >
+                        <span>{selectedPassword.url}</span>
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    </div>
+                  )}
+
+                  {selectedPassword.notes && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                      <p className="text-gray-900 text-sm bg-white p-3 rounded border">{selectedPassword.notes}</p>
+                    </div>
+                  )}
+
+                  <div className="flex items-center space-x-2 pt-4 border-t border-gray-200">
+                    <button
+                      onClick={() => handleEditPassword(selectedPassword)}
+                      className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                      <span>Edit</span>
+                    </button>
+                    <button
+                      onClick={() => handleToggleFavorite(selectedPassword.id)}
+                      className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+                        selectedPassword.isFavorite
+                          ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      <Star className={`w-4 h-4 ${selectedPassword.isFavorite ? 'fill-current' : ''}`} />
+                      <span>{selectedPassword.isFavorite ? 'Unfavorite' : 'Favorite'}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
-            <h3 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent mb-3">Loading your passwords...</h3>
-            <p className="text-gray-400 animate-pulse">Syncing with cloud storage...</p>
-          </div>
-        ) : filteredPasswords.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="w-20 h-20 bg-gradient-to-r from-gray-700 to-gray-800 rounded-3xl flex items-center justify-center mx-auto mb-6 transform rotate-12">
-              <Search className="w-10 h-10 text-gray-400" />
-            </div>
-            <h3 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent mb-3">No passwords found</h3>
-            <p className="text-gray-400 mb-6">
-              {searchTerm || selectedCategory !== 'all' || showFavoritesOnly
-                ? "Try adjusting your search or filter criteria."
-                : "Get started by adding your first password."}
-            </p>
-            <button
-              onClick={() => setIsModalOpen(true)}
-              disabled={loading}
-              className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-2xl hover:from-cyan-600 hover:to-blue-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
-            >
-              <Plus className="w-5 h-5" />
-              <span>Add Your First Password</span>
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredPasswords.map((password) => {
-              const category = categories.find(c => c.id === password.category) || categories[0];
-              return (
-                <PasswordCard
-                  key={password.id}
-                  password={password}
-                  category={category}
-                  onEdit={handleEditPassword}
-                  onDelete={onDeletePassword}
-                  onToggleFavorite={handleToggleFavorite}
-                  loading={loading}
-                />
-              );
-            })}
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Password Modal */}
