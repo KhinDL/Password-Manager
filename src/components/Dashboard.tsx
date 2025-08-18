@@ -507,7 +507,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
         {/* Footer */}
         <div className={`p-4 border-t border-gray-700 ${sidebarCollapsed ? 'px-2' : ''}`}>
-          <div className={`flex items-center ${sidebarCollapsed ? 'flex-col space-y-2' : 'justify-between'}`}>
+          <div className={`flex items-center ${sidebarCollapsed ? 'flex-col space-y-2' : 'justify-between'} mb-3`}>
             <button
               onClick={exportPasswords}
               className="p-2 text-gray-400 hover:text-gray-300 hover:bg-gray-700 rounded-lg transition-colors"
@@ -521,6 +521,21 @@ export const Dashboard: React.FC<DashboardProps> = ({
               title={sidebarCollapsed ? "Logout" : "Logout"}
             >
               <LogOut className="w-5 h-5" />
+            </button>
+          </div>
+          
+          {/* Chevron Toggle Button */}
+          <div className="flex justify-center">
+            <button
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className="p-2 text-gray-400 hover:text-gray-300 hover:bg-gray-700 rounded-lg transition-colors"
+              title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+              {sidebarCollapsed ? (
+                <ChevronRight className="w-5 h-5" />
+              ) : (
+                <ChevronLeft className="w-5 h-5" />
+              )}
             </button>
           </div>
         </div>
