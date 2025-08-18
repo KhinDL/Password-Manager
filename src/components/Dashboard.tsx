@@ -6,6 +6,7 @@ import { NotesModal } from './NotesModal';
 import { AuthModal } from './AuthModal';
 import { PasswordEntry, Category, Note, AuthEntry } from '../types';
 import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
+  Shield,
 import * as LucideIcons from 'lucide-react';
 
 interface DashboardProps {
