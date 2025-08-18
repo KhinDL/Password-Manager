@@ -662,8 +662,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
               ) : (
                 <div className="p-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <div className="p-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {filteredPasswords.map((password) => {
                       const category = categories.find(c => c.id === password.category) || categories[0];
                       return (
