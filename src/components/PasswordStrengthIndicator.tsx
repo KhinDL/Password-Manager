@@ -40,9 +40,26 @@ export const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps>
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      <span className={`text-sm font-medium ${strength.color}`}>
+      <div className={`p-1 rounded-lg ${
+        strength.score <= 2 ? 'bg-red-500/20' : 
+        strength.score <= 4 ? 'bg-yellow-500/20' : 
+        'bg-green-500/20'
+      }`}>
+        {getIcon()}
+      </div>
+      <span className={`text-xl font-bold ${strength.color} tracking-wide`}>
         {strength.label}
       </span>
+      <div className={`w-20 h-3 bg-gray-700 rounded-full overflow-hidden`}>
+        <div 
+          className={`h-full transition-all duration-300 ${
+            strength.score <= 2 ? 'bg-red-500' : 
+            strength.score <= 4 ? 'bg-yellow-500' : 
+            'bg-green-500'
+          }`}
+          style={{ width: `${percentage}%` }}
+        />
+      </div>
       <div className={`w-16 h-2 bg-gray-200 rounded-full overflow-hidden`}>
         <div 
           className={`h-full transition-all duration-300 ${

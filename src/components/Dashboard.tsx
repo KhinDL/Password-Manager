@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Plus, LogOut, Filter, Download, Upload, Star, Grid, List, Eye, EyeOff, Copy, Edit2, Trash2, ExternalLink, Check } from 'lucide-react';
+import { Search, Plus, LogOut, Filter, Download, Upload, Star, Grid, List, Eye, EyeOff, Copy, Edit2, Trash2, ExternalLink, Check, FileText, StickyNote } from 'lucide-react';
 import { PasswordCard } from './PasswordCard';
 import { PasswordModal } from './PasswordModal';
-import { PasswordEntry, Category } from '../types';
+import { NotesModal } from './NotesModal';
+import { PasswordEntry, Category, Note } from '../types';
 import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
 import * as LucideIcons from 'lucide-react';
 
@@ -29,11 +30,37 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
   const [editingPassword, setEditingPassword] = useState<PasswordEntry | undefined>();
+  const [editingNote, setEditingNote] = useState<Note | undefined>();
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [activeTab, setActiveTab] = useState<'passwords' | 'notes'>('passwords');
   const [selectedPassword, setSelectedPassword] = useState<PasswordEntry | null>(null);
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [showPasswords, setShowPasswords] = useState<{[key: string]: boolean}>({});
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  
+  // Mock notes data - in a real app, this would come from props
+  const [notes, setNotes] = useState<Note[]>([
+    {
+      id: '1',
+      title: 'Server Credentials',
+      content: 'Production server details:\nIP: 192.168.1.100\nSSH Key: ~/.ssh/prod_key\nBackup schedule: Daily at 2 AM',
+      category: 'Work',
+      createdAt: new Date('2024-01-15'),
+      updatedAt: new Date('2024-01-15'),
+      isFavorite: true
+    },
+    {
+      id: '2',
+      title: 'WiFi Passwords',
+      content: 'Home WiFi: MyNetwork123!\nGuest WiFi: Guest2024\nOffice WiFi: CompanySecure456',
+      category: 'Personal',
+      createdAt: new Date('2024-01-10'),
+      updatedAt: new Date('2024-01-12'),
+      isFavorite: false
+    }
+  ]);
 
   const filteredPasswords = useMemo(() => {
     return passwords.filter(password => {
@@ -48,9 +75,25 @@ export const Dashboard: React.FC<DashboardProps> = ({
     });
   }, [passwords, searchTerm, selectedCategory, showFavoritesOnly]);
 
+  const filteredNotes = useMemo(() => {
+    return notes.filter(note => {
+      const matchesSearch = note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           note.content.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesFavorites = !showFavoritesOnly || note.isFavorite;
+      
+      return matchesSearch && matchesFavorites;
+    });
+  }, [notes, searchTerm, showFavoritesOnly]);
+
   const handleEditPassword = (password: PasswordEntry) => {
     setEditingPassword(password);
     setIsModalOpen(true);
+  };
+
+  const handleEditNote = (note: Note) => {
+    setEditingNote(note);
+    setIsNotesModalOpen(true);
   };
 
   const handleCloseModal = () => {
@@ -58,10 +101,44 @@ export const Dashboard: React.FC<DashboardProps> = ({
     setEditingPassword(undefined);
   };
 
+  const handleCloseNotesModal = () => {
+    setIsNotesModalOpen(false);
+    setEditingNote(undefined);
+  };
+
   const handleToggleFavorite = (id: string) => {
     const password = passwords.find(p => p.id === id);
     if (password) {
       onUpdatePassword(id, { isFavorite: !password.isFavorite });
+    }
+  };
+
+  const handleToggleNoteFavorite = (id: string) => {
+    setNotes(prev => prev.map(note => 
+      note.id === id ? { ...note, isFavorite: !note.isFavorite } : note
+    ));
+  };
+
+  const handleSaveNote = (noteData: Omit<Note, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const newNote: Note = {
+      ...noteData,
+      id: Date.now().toString(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    setNotes(prev => [newNote, ...prev]);
+  };
+
+  const handleUpdateNote = (id: string, updates: Partial<Note>) => {
+    setNotes(prev => prev.map(note => 
+      note.id === id ? { ...note, ...updates, updatedAt: new Date() } : note
+    ));
+  };
+
+  const handleDeleteNote = (id: string) => {
+    setNotes(prev => prev.filter(note => note.id !== id));
+    if (selectedNote?.id === id) {
+      setSelectedNote(null);
     }
   };
 
@@ -97,9 +174,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
     const favorites = passwords.filter(p => p.isFavorite).length;
     const weak = passwords.filter(p => p.password.length < 8).length;
     const strong = passwords.filter(p => p.password.length >= 12 && /[A-Z]/.test(p.password) && /[a-z]/.test(p.password) && /\d/.test(p.password) && /[!@#$%^&*(),.?":{}|<>]/.test(p.password)).length;
+    const notesCount = notes.length;
+    const favoriteNotes = notes.filter(n => n.isFavorite).length;
     
-    return { total, favorites, weak, strong };
-  }, [passwords]);
+    return { total, favorites, weak, strong, notesCount, favoriteNotes };
+  }, [passwords, notes]);
 
   const renderPasswordRow = (password: PasswordEntry) => {
     const category = categories.find(c => c.id === password.category) || categories[0];
@@ -109,8 +188,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
     return (
       <tr 
         key={password.id}
-        className={`border-b border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors ${
-          selectedPassword?.id === password.id ? 'bg-blue-50' : ''
+        className={`border-b border-gray-700 hover:bg-gray-700/50 cursor-pointer transition-colors ${
+          selectedPassword?.id === password.id ? 'bg-gray-700/70' : ''
         }`}
         onClick={() => setSelectedPassword(password)}
       >
@@ -124,21 +203,21 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="font-medium text-gray-900">{password.title}</span>
+                <span className="font-medium text-white">{password.title}</span>
                 {password.isFavorite && (
                   <Star className="w-4 h-4 text-yellow-500 fill-current" />
                 )}
               </div>
-              <span className="text-sm text-gray-500">{category.name}</span>
+              <span className="text-sm text-gray-400">{category.name}</span>
             </div>
           </div>
         </td>
-        <td className="px-6 py-4 text-gray-900 font-mono text-sm">
+        <td className="px-6 py-4 text-gray-300 font-mono text-sm">
           {password.username}
         </td>
         <td className="px-6 py-4">
           <div className="flex items-center space-x-2">
-            <span className="font-mono text-sm text-gray-900">
+            <span className="font-mono text-sm text-gray-300">
               {isPasswordVisible ? password.password : '••••••••'}
             </span>
             <button
@@ -146,7 +225,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 e.stopPropagation();
                 togglePasswordVisibility(password.id);
               }}
-              className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+              className="p-1 text-gray-400 hover:text-gray-300 transition-colors"
             >
               {isPasswordVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
@@ -155,10 +234,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 e.stopPropagation();
                 copyToClipboard(password.password, `password-${password.id}`);
               }}
-              className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+              className="p-1 text-gray-400 hover:text-gray-300 transition-colors"
             >
               {copiedField === `password-${password.id}` ? (
-                <Check className="w-4 h-4 text-green-600" />
+                <Check className="w-4 h-4 text-green-500" />
               ) : (
                 <Copy className="w-4 h-4" />
               )}
@@ -177,8 +256,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
               }}
               className={`p-1 rounded transition-colors ${
                 password.isFavorite
-                  ? 'text-yellow-500 hover:text-yellow-600'
-                  : 'text-gray-400 hover:text-gray-600'
+                  ? 'text-yellow-500 hover:text-yellow-400'
+                  : 'text-gray-400 hover:text-gray-300'
               }`}
             >
               <Star className={`w-4 h-4 ${password.isFavorite ? 'fill-current' : ''}`} />
@@ -188,7 +267,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 e.stopPropagation();
                 handleEditPassword(password);
               }}
-              className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+              className="p-1 text-gray-400 hover:text-gray-300 transition-colors"
             >
               <Edit2 className="w-4 h-4" />
             </button>
@@ -197,7 +276,79 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 e.stopPropagation();
                 onDeletePassword(password.id);
               }}
-              className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+              className="p-1 text-gray-400 hover:text-red-400 transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        </td>
+      </tr>
+    );
+  };
+
+  const renderNoteRow = (note: Note) => {
+    return (
+      <tr 
+        key={note.id}
+        className={`border-b border-gray-700 hover:bg-gray-700/50 cursor-pointer transition-colors ${
+          selectedNote?.id === note.id ? 'bg-gray-700/70' : ''
+        }`}
+        onClick={() => setSelectedNote(note)}
+      >
+        <td className="px-6 py-4">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-purple-600 text-white text-sm">
+              <FileText className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <span className="font-medium text-white">{note.title}</span>
+                {note.isFavorite && (
+                  <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                )}
+              </div>
+              <span className="text-sm text-gray-400">{note.category}</span>
+            </div>
+          </div>
+        </td>
+        <td className="px-6 py-4 text-gray-300 text-sm">
+          <div className="max-w-xs truncate">
+            {note.content}
+          </div>
+        </td>
+        <td className="px-6 py-4 text-gray-400 text-sm">
+          {note.updatedAt.toLocaleDateString()}
+        </td>
+        <td className="px-6 py-4">
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleToggleNoteFavorite(note.id);
+              }}
+              className={`p-1 rounded transition-colors ${
+                note.isFavorite
+                  ? 'text-yellow-500 hover:text-yellow-400'
+                  : 'text-gray-400 hover:text-gray-300'
+              }`}
+            >
+              <Star className={`w-4 h-4 ${note.isFavorite ? 'fill-current' : ''}`} />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEditNote(note);
+              }}
+              className="p-1 text-gray-400 hover:text-gray-300 transition-colors"
+            >
+              <Edit2 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteNote(note.id);
+              }}
+              className="p-1 text-gray-400 hover:text-red-400 transition-colors"
             >
               <Trash2 className="w-4 h-4" />
             </button>
@@ -208,16 +359,50 @@ export const Dashboard: React.FC<DashboardProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="min-h-screen bg-gray-900 flex">
       {/* Sidebar */}
-      <div className="w-64 bg-white shadow-lg border-r border-gray-200 flex flex-col">
+      <div className="w-64 bg-gray-800 shadow-lg border-r border-gray-700 flex flex-col">
         {/* Header */}
-        <div className="p-6 border-b border-gray-200">
+        <div className="p-6 border-b border-gray-700">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">VG</span>
             </div>
-            <h1 className="text-xl font-bold text-gray-900">VaultGuard</h1>
+            <h1 className="text-xl font-bold text-white">VaultGuard</h1>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="p-4 border-b border-gray-700">
+          <div className="flex space-x-1 bg-gray-700 rounded-lg p-1">
+            <button
+              onClick={() => {
+                setActiveTab('passwords');
+                setSelectedNote(null);
+                setSelectedPassword(null);
+              }}
+              className={`flex-1 flex items-center justify-center space-x-2 px-3 py-2 rounded-md transition-colors ${
+                activeTab === 'passwords'
+                  ? 'bg-cyan-600 text-white'
+                  : 'text-gray-300 hover:text-white hover:bg-gray-600'
+              }`}
+            >
+              <span className="text-sm font-medium">Passwords</span>
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('notes');
+                setSelectedPassword(null);
+                setSelectedNote(null);
+              }}
+              className={`flex-1 flex items-center justify-center space-x-2 px-3 py-2 rounded-md transition-colors ${
+                activeTab === 'notes'
+                  ? 'bg-purple-600 text-white'
+                  : 'text-gray-300 hover:text-white hover:bg-gray-600'
+              }`}
+            >
+              <span className="text-sm font-medium">Notes</span>
+            </button>
           </div>
         </div>
 
@@ -228,12 +413,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
               onClick={() => setSelectedCategory('all')}
               className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center space-x-3 ${
                 selectedCategory === 'all'
-                  ? 'bg-blue-100 text-blue-700 font-medium'
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? 'bg-cyan-600/20 text-cyan-400 font-medium'
+                  : 'text-gray-300 hover:text-white hover:bg-gray-700'
               }`}
             >
-              <div className="w-6 h-6 bg-gray-500 rounded flex items-center justify-center">
-                <span className="text-white text-xs font-bold">{stats.total}</span>
+              <div className="w-6 h-6 bg-gray-600 rounded flex items-center justify-center">
+                <span className="text-white text-xs font-bold">
+                  {activeTab === 'passwords' ? stats.total : stats.notesCount}
+                </span>
               </div>
               <span>All Items</span>
             </button>
@@ -242,62 +429,68 @@ export const Dashboard: React.FC<DashboardProps> = ({
               onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
               className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center space-x-3 ${
                 showFavoritesOnly
-                  ? 'bg-yellow-100 text-yellow-700 font-medium'
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? 'bg-yellow-600/20 text-yellow-400 font-medium'
+                  : 'text-gray-300 hover:text-white hover:bg-gray-700'
               }`}
             >
-              <div className="w-6 h-6 bg-yellow-500 rounded flex items-center justify-center">
+              <div className="w-6 h-6 bg-yellow-600 rounded flex items-center justify-center">
                 <Star className="w-3 h-3 text-white fill-current" />
               </div>
               <span>Favorites</span>
-              <span className="ml-auto text-sm text-gray-500">{stats.favorites}</span>
+              <span className="ml-auto text-sm text-gray-400">
+                {activeTab === 'passwords' ? stats.favorites : stats.favoriteNotes}
+              </span>
             </button>
 
-            <div className="pt-4 pb-2">
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3">Categories</h3>
-            </div>
+            {activeTab === 'passwords' && (
+              <>
+                <div className="pt-4 pb-2">
+                  <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3">Categories</h3>
+                </div>
 
-            {categories.map(category => {
-              const IconComponent = (LucideIcons as any)[category.icon] || LucideIcons.Folder;
-              const count = passwords.filter(p => p.category === category.id).length;
-              
-              return (
-                <button
-                  key={category.id}
-                  onClick={() => setSelectedCategory(category.id)}
-                  className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center space-x-3 ${
-                    selectedCategory === category.id
-                      ? 'bg-blue-100 text-blue-700 font-medium'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  <div
-                    className="w-6 h-6 rounded flex items-center justify-center text-white"
-                    style={{ backgroundColor: category.color }}
-                  >
-                    <IconComponent className="w-3 h-3" />
-                  </div>
-                  <span>{category.name}</span>
-                  <span className="ml-auto text-sm text-gray-500">{count}</span>
-                </button>
-              );
-            })}
+                {categories.map(category => {
+                  const IconComponent = (LucideIcons as any)[category.icon] || LucideIcons.Folder;
+                  const count = passwords.filter(p => p.category === category.id).length;
+                  
+                  return (
+                    <button
+                      key={category.id}
+                      onClick={() => setSelectedCategory(category.id)}
+                      className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center space-x-3 ${
+                        selectedCategory === category.id
+                          ? 'bg-cyan-600/20 text-cyan-400 font-medium'
+                          : 'text-gray-300 hover:text-white hover:bg-gray-700'
+                      }`}
+                    >
+                      <div
+                        className="w-6 h-6 rounded flex items-center justify-center text-white"
+                        style={{ backgroundColor: category.color }}
+                      >
+                        <IconComponent className="w-3 h-3" />
+                      </div>
+                      <span>{category.name}</span>
+                      <span className="ml-auto text-sm text-gray-400">{count}</span>
+                    </button>
+                  );
+                })}
+              </>
+            )}
           </div>
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-gray-700">
           <div className="flex items-center justify-between">
             <button
               onClick={exportPasswords}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 text-gray-400 hover:text-gray-300 hover:bg-gray-700 rounded-lg transition-colors"
               title="Export passwords"
             >
               <Download className="w-5 h-5" />
             </button>
             <button
               onClick={onLogout}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 text-gray-400 hover:text-gray-300 hover:bg-gray-700 rounded-lg transition-colors"
               title="Logout"
             >
               <LogOut className="w-5 h-5" />
@@ -309,52 +502,58 @@ export const Dashboard: React.FC<DashboardProps> = ({
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Top Bar */}
-        <div className="bg-white shadow-sm border-b border-gray-200 p-4">
+        <div className="bg-gray-800 shadow-sm border-b border-gray-700 p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   type="text"
-                  placeholder="Search passwords..."
+                  placeholder={`Search ${activeTab}...`}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-80"
+                  className="pl-10 pr-4 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent w-80 bg-gray-700 text-white placeholder-gray-400"
                 />
               </div>
             </div>
 
             <div className="flex items-center space-x-3">
-              <div className="flex items-center bg-gray-100 rounded-lg p-1">
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`p-2 rounded transition-colors ${
-                    viewMode === 'list'
-                      ? 'bg-white text-blue-600 shadow-sm'
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  <List className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded transition-colors ${
-                    viewMode === 'grid'
-                      ? 'bg-white text-blue-600 shadow-sm'
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  <Grid className="w-4 h-4" />
-                </button>
-              </div>
+              {activeTab === 'passwords' && (
+                <div className="flex items-center bg-gray-700 rounded-lg p-1">
+                  <button
+                    onClick={() => setViewMode('list')}
+                    className={`p-2 rounded transition-colors ${
+                      viewMode === 'list'
+                        ? 'bg-gray-600 text-cyan-400 shadow-sm'
+                        : 'text-gray-400 hover:text-gray-300'
+                    }`}
+                  >
+                    <List className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode('grid')}
+                    className={`p-2 rounded transition-colors ${
+                      viewMode === 'grid'
+                        ? 'bg-gray-600 text-cyan-400 shadow-sm'
+                        : 'text-gray-400 hover:text-gray-300'
+                    }`}
+                  >
+                    <Grid className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
 
               <button
-                onClick={() => setIsModalOpen(true)}
+                onClick={() => activeTab === 'passwords' ? setIsModalOpen(true) : setIsNotesModalOpen(true)}
                 disabled={loading}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                  activeTab === 'passwords'
+                    ? 'bg-cyan-600 hover:bg-cyan-700 text-white'
+                    : 'bg-purple-600 hover:bg-purple-700 text-white'
+                }`}
               >
                 <Plus className="w-4 h-4" />
-                <span>Add Password</span>
+                <span>Add {activeTab === 'passwords' ? 'Password' : 'Note'}</span>
               </button>
             </div>
           </div>
@@ -362,193 +561,296 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
         {/* Content Area */}
         <div className="flex-1 flex">
-          {/* Password List */}
-          <div className="flex-1 bg-white">
+          {/* Main List */}
+          <div className="flex-1 bg-gray-900">
             {loading ? (
               <div className="flex items-center justify-center h-64">
                 <div className="text-center">
-                  <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                  <p className="text-gray-500">Loading passwords...</p>
+                  <div className="w-8 h-8 border-2 border-cyan-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                  <p className="text-gray-400">Loading {activeTab}...</p>
                 </div>
               </div>
-            ) : filteredPasswords.length === 0 ? (
-              <div className="flex items-center justify-center h-64">
-                <div className="text-center">
-                  <Search className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No passwords found</h3>
-                  <p className="text-gray-500 mb-4">
-                    {searchTerm || selectedCategory !== 'all' || showFavoritesOnly
-                      ? "Try adjusting your search or filter criteria."
-                      : "Get started by adding your first password."}
-                  </p>
-                  <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>Add Password</span>
-                  </button>
+            ) : activeTab === 'passwords' ? (
+              filteredPasswords.length === 0 ? (
+                <div className="flex items-center justify-center h-64">
+                  <div className="text-center">
+                    <Search className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-white mb-2">No passwords found</h3>
+                    <p className="text-gray-400 mb-4">
+                      {searchTerm || selectedCategory !== 'all' || showFavoritesOnly
+                        ? "Try adjusting your search or filter criteria."
+                        : "Get started by adding your first password."}
+                    </p>
+                    <button
+                      onClick={() => setIsModalOpen(true)}
+                      className="inline-flex items-center space-x-2 px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Add Password</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ) : viewMode === 'list' ? (
-              <div className="overflow-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Name
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Username
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Password
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Strength
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredPasswords.map(renderPasswordRow)}
-                  </tbody>
-                </table>
-              </div>
+              ) : viewMode === 'list' ? (
+                <div className="overflow-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-800 border-b border-gray-700">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Name
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Username
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Password
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Strength
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-gray-900 divide-y divide-gray-700">
+                      {filteredPasswords.map(renderPasswordRow)}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredPasswords.map((password) => {
+                      const category = categories.find(c => c.id === password.category) || categories[0];
+                      return (
+                        <PasswordCard
+                          key={password.id}
+                          password={password}
+                          category={category}
+                          onEdit={handleEditPassword}
+                          onDelete={onDeletePassword}
+                          onToggleFavorite={handleToggleFavorite}
+                          loading={loading}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              )
             ) : (
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredPasswords.map((password) => {
-                    const category = categories.find(c => c.id === password.category) || categories[0];
-                    return (
-                      <PasswordCard
-                        key={password.id}
-                        password={password}
-                        category={category}
-                        onEdit={handleEditPassword}
-                        onDelete={onDeletePassword}
-                        onToggleFavorite={handleToggleFavorite}
-                        loading={loading}
-                      />
-                    );
-                  })}
+              // Notes view
+              filteredNotes.length === 0 ? (
+                <div className="flex items-center justify-center h-64">
+                  <div className="text-center">
+                    <StickyNote className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-white mb-2">No notes found</h3>
+                    <p className="text-gray-400 mb-4">
+                      {searchTerm || showFavoritesOnly
+                        ? "Try adjusting your search or filter criteria."
+                        : "Get started by adding your first note."}
+                    </p>
+                    <button
+                      onClick={() => setIsNotesModalOpen(true)}
+                      className="inline-flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Add Note</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="overflow-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-800 border-b border-gray-700">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Title
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Content
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Modified
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-gray-900 divide-y divide-gray-700">
+                      {filteredNotes.map(renderNoteRow)}
+                    </tbody>
+                  </table>
+                </div>
+              )
             )}
           </div>
 
           {/* Details Panel */}
-          {selectedPassword && viewMode === 'list' && (
-            <div className="w-80 bg-gray-50 border-l border-gray-200 p-6">
+          {((selectedPassword && activeTab === 'passwords' && viewMode === 'list') || 
+            (selectedNote && activeTab === 'notes')) && (
+            <div className="w-80 bg-gray-800 border-l border-gray-700 p-6">
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900">Password Details</h3>
+                  <h3 className="text-lg font-semibold text-white">
+                    {activeTab === 'passwords' ? 'Password Details' : 'Note Details'}
+                  </h3>
                   <button
-                    onClick={() => setSelectedPassword(null)}
-                    className="p-1 text-gray-400 hover:text-gray-600"
+                    onClick={() => {
+                      setSelectedPassword(null);
+                      setSelectedNote(null);
+                    }}
+                    className="p-1 text-gray-400 hover:text-gray-300"
                   >
                     <X className="w-5 h-5" />
                   </button>
                 </div>
 
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                    <p className="text-gray-900">{selectedPassword.title}</p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
-                    <div className="flex items-center space-x-2">
-                      <p className="text-gray-900 font-mono">{selectedPassword.username}</p>
-                      <button
-                        onClick={() => copyToClipboard(selectedPassword.username, 'detail-username')}
-                        className="p-1 text-gray-400 hover:text-gray-600"
-                      >
-                        {copiedField === 'detail-username' ? (
-                          <Check className="w-4 h-4 text-green-600" />
-                        ) : (
-                          <Copy className="w-4 h-4" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                    <div className="flex items-center space-x-2">
-                      <p className="text-gray-900 font-mono">
-                        {showPasswords[selectedPassword.id] ? selectedPassword.password : '••••••••'}
-                      </p>
-                      <button
-                        onClick={() => togglePasswordVisibility(selectedPassword.id)}
-                        className="p-1 text-gray-400 hover:text-gray-600"
-                      >
-                        {showPasswords[selectedPassword.id] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                      <button
-                        onClick={() => copyToClipboard(selectedPassword.password, 'detail-password')}
-                        className="p-1 text-gray-400 hover:text-gray-600"
-                      >
-                        {copiedField === 'detail-password' ? (
-                          <Check className="w-4 h-4 text-green-600" />
-                        ) : (
-                          <Copy className="w-4 h-4" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Password Strength</label>
-                    <PasswordStrengthIndicator password={selectedPassword.password} />
-                  </div>
-
-                  {selectedPassword.url && (
+                {activeTab === 'passwords' && selectedPassword && (
+                  <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Website</label>
-                      <a
-                        href={selectedPassword.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 hover:underline flex items-center space-x-1"
-                      >
-                        <span>{selectedPassword.url}</span>
-                        <ExternalLink className="w-4 h-4" />
-                      </a>
+                      <label className="block text-sm font-medium text-gray-300 mb-1">Title</label>
+                      <p className="text-white">{selectedPassword.title}</p>
                     </div>
-                  )}
 
-                  {selectedPassword.notes && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                      <p className="text-gray-900 text-sm bg-white p-3 rounded border">{selectedPassword.notes}</p>
+                      <label className="block text-sm font-medium text-gray-300 mb-1">Username</label>
+                      <div className="flex items-center space-x-2">
+                        <p className="text-white font-mono">{selectedPassword.username}</p>
+                        <button
+                          onClick={() => copyToClipboard(selectedPassword.username, 'detail-username')}
+                          className="p-1 text-gray-400 hover:text-gray-300"
+                        >
+                          {copiedField === 'detail-username' ? (
+                            <Check className="w-4 h-4 text-green-500" />
+                          ) : (
+                            <Copy className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
                     </div>
-                  )}
 
-                  <div className="flex items-center space-x-2 pt-4 border-t border-gray-200">
-                    <button
-                      onClick={() => handleEditPassword(selectedPassword)}
-                      className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                      <span>Edit</span>
-                    </button>
-                    <button
-                      onClick={() => handleToggleFavorite(selectedPassword.id)}
-                      className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
-                        selectedPassword.isFavorite
-                          ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      <Star className={`w-4 h-4 ${selectedPassword.isFavorite ? 'fill-current' : ''}`} />
-                      <span>{selectedPassword.isFavorite ? 'Unfavorite' : 'Favorite'}</span>
-                    </button>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1">Password</label>
+                      <div className="flex items-center space-x-2">
+                        <p className="text-white font-mono">
+                          {showPasswords[selectedPassword.id] ? selectedPassword.password : '••••••••'}
+                        </p>
+                        <button
+                          onClick={() => togglePasswordVisibility(selectedPassword.id)}
+                          className="p-1 text-gray-400 hover:text-gray-300"
+                        >
+                          {showPasswords[selectedPassword.id] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                        <button
+                          onClick={() => copyToClipboard(selectedPassword.password, 'detail-password')}
+                          className="p-1 text-gray-400 hover:text-gray-300"
+                        >
+                          {copiedField === 'detail-password' ? (
+                            <Check className="w-4 h-4 text-green-500" />
+                          ) : (
+                            <Copy className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">Password Strength</label>
+                      <PasswordStrengthIndicator password={selectedPassword.password} />
+                    </div>
+
+                    {selectedPassword.url && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-1">Website</label>
+                        <a
+                          href={selectedPassword.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-cyan-400 hover:text-cyan-300 hover:underline flex items-center space-x-1"
+                        >
+                          <span>{selectedPassword.url}</span>
+                          <ExternalLink className="w-4 h-4" />
+                        </a>
+                      </div>
+                    )}
+
+                    {selectedPassword.notes && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-1">Notes</label>
+                        <p className="text-white text-sm bg-gray-700 p-3 rounded border border-gray-600">{selectedPassword.notes}</p>
+                      </div>
+                    )}
+
+                    <div className="flex items-center space-x-2 pt-4 border-t border-gray-700">
+                      <button
+                        onClick={() => handleEditPassword(selectedPassword)}
+                        className="flex items-center space-x-2 px-3 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                        <span>Edit</span>
+                      </button>
+                      <button
+                        onClick={() => handleToggleFavorite(selectedPassword.id)}
+                        className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+                          selectedPassword.isFavorite
+                            ? 'bg-yellow-600/20 text-yellow-400 hover:bg-yellow-600/30'
+                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        }`}
+                      >
+                        <Star className={`w-4 h-4 ${selectedPassword.isFavorite ? 'fill-current' : ''}`} />
+                        <span>{selectedPassword.isFavorite ? 'Unfavorite' : 'Favorite'}</span>
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {activeTab === 'notes' && selectedNote && (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1">Title</label>
+                      <p className="text-white">{selectedNote.title}</p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1">Category</label>
+                      <p className="text-gray-300">{selectedNote.category}</p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1">Content</label>
+                      <div className="bg-gray-700 p-3 rounded border border-gray-600 max-h-64 overflow-y-auto">
+                        <pre className="text-white text-sm whitespace-pre-wrap">{selectedNote.content}</pre>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-1">Last Modified</label>
+                      <p className="text-gray-300 text-sm">{selectedNote.updatedAt.toLocaleString()}</p>
+                    </div>
+
+                    <div className="flex items-center space-x-2 pt-4 border-t border-gray-700">
+                      <button
+                        onClick={() => handleEditNote(selectedNote)}
+                        className="flex items-center space-x-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                        <span>Edit</span>
+                      </button>
+                      <button
+                        onClick={() => handleToggleNoteFavorite(selectedNote.id)}
+                        className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+                          selectedNote.isFavorite
+                            ? 'bg-yellow-600/20 text-yellow-400 hover:bg-yellow-600/30'
+                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        }`}
+                      >
+                        <Star className={`w-4 h-4 ${selectedNote.isFavorite ? 'fill-current' : ''}`} />
+                        <span>{selectedNote.isFavorite ? 'Unfavorite' : 'Favorite'}</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -563,6 +865,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
         onUpdate={onUpdatePassword}
         categories={categories}
         editingPassword={editingPassword}
+        loading={loading}
+      />
+
+      {/* Notes Modal */}
+      <NotesModal
+        isOpen={isNotesModalOpen}
+        onClose={handleCloseNotesModal}
+        onSave={handleSaveNote}
+        onUpdate={handleUpdateNote}
+        editingNote={editingNote}
         loading={loading}
       />
     </div>

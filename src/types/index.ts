@@ -12,6 +12,16 @@ export interface PasswordEntry {
   isFavorite?: boolean;
 }
 
+export interface Note {
+  id: string;
+  title: string;
+  content: string;
+  category: string;
+  createdAt: Date;
+  updatedAt: Date;
+  isFavorite?: boolean;
+}
+
 export interface Category {
   id: string;
   name: string;
