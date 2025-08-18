@@ -87,7 +87,8 @@ src/
    - Create a Firebase project at [Firebase Console](https://console.firebase.google.com)
    - Enable Firestore Database
    - Enable Authentication
-   - Copy your Firebase config to `src/config/firebase.ts`
+   - Copy the `.env.example` file to `.env`
+   - Fill in your Firebase configuration values in the `.env` file
 
 4. **Start development server**
    ```bash
