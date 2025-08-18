@@ -194,31 +194,31 @@ export const Dashboard: React.FC<DashboardProps> = ({
         }`}
         onClick={() => setSelectedPassword(password)}
       >
-        <td className="px-6 py-4">
-          <div className="flex items-center space-x-3">
+        <td className="px-4 py-3">
+          <div className="flex items-center space-x-2">
             <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm"
+              className="w-6 h-6 rounded-lg flex items-center justify-center text-white text-xs"
               style={{ backgroundColor: category.color }}
             >
-              <IconComponent className="w-4 h-4" />
+              <IconComponent className="w-3 h-3" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="font-medium text-white">{password.title}</span>
+                <span className="font-medium text-white text-sm">{password.title}</span>
                 {password.isFavorite && (
-                  <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                  <Star className="w-3 h-3 text-yellow-500 fill-current" />
                 )}
               </div>
-              <span className="text-sm text-gray-400">{category.name}</span>
+              <span className="text-xs text-gray-400">{category.name}</span>
             </div>
           </div>
         </td>
-        <td className="px-6 py-4 text-gray-300 font-mono text-sm">
+        <td className="px-4 py-3 text-gray-300 font-mono text-xs">
           {password.username}
         </td>
-        <td className="px-6 py-4">
+        <td className="px-4 py-3">
           <div className="flex items-center space-x-2">
-            <span className="font-mono text-sm text-gray-300">
+            <span className="font-mono text-xs text-gray-300">
               {isPasswordVisible ? password.password : '••••••••'}
             </span>
             <button
@@ -226,60 +226,60 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 e.stopPropagation();
                 togglePasswordVisibility(password.id);
               }}
-              className="p-1 text-gray-400 hover:text-gray-300 transition-colors"
+              className="p-0.5 text-gray-400 hover:text-gray-300 transition-colors"
             >
-              {isPasswordVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              {isPasswordVisible ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
             </button>
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 copyToClipboard(password.password, `password-${password.id}`);
               }}
-              className="p-1 text-gray-400 hover:text-gray-300 transition-colors"
+              className="p-0.5 text-gray-400 hover:text-gray-300 transition-colors"
             >
               {copiedField === `password-${password.id}` ? (
-                <Check className="w-4 h-4 text-green-500" />
+                <Check className="w-3 h-3 text-green-500" />
               ) : (
-                <Copy className="w-4 h-4" />
+                <Copy className="w-3 h-3" />
               )}
             </button>
           </div>
         </td>
-        <td className="px-6 py-4">
+        <td className="px-4 py-3">
           <PasswordStrengthIndicator password={password.password} />
         </td>
-        <td className="px-6 py-4">
+        <td className="px-4 py-3">
           <div className="flex items-center space-x-2">
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 handleToggleFavorite(password.id);
               }}
-              className={`p-1 rounded transition-colors ${
+              className={`p-0.5 rounded transition-colors ${
                 password.isFavorite
                   ? 'text-yellow-500 hover:text-yellow-400'
                   : 'text-gray-400 hover:text-gray-300'
               }`}
             >
-              <Star className={`w-4 h-4 ${password.isFavorite ? 'fill-current' : ''}`} />
+              <Star className={`w-3 h-3 ${password.isFavorite ? 'fill-current' : ''}`} />
             </button>
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 handleEditPassword(password);
               }}
-              className="p-1 text-gray-400 hover:text-gray-300 transition-colors"
+              className="p-0.5 text-gray-400 hover:text-gray-300 transition-colors"
             >
-              <Edit2 className="w-4 h-4" />
+              <Edit2 className="w-3 h-3" />
             </button>
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onDeletePassword(password.id);
               }}
-              className="p-1 text-gray-400 hover:text-red-400 transition-colors"
+              className="p-0.5 text-gray-400 hover:text-red-400 transition-colors"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-3 h-3" />
             </button>
           </div>
         </td>
@@ -296,62 +296,62 @@ export const Dashboard: React.FC<DashboardProps> = ({
         }`}
         onClick={() => setSelectedNote(note)}
       >
-        <td className="px-6 py-4">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-purple-600 text-white text-sm">
-              <FileText className="w-4 h-4" />
+        <td className="px-4 py-3">
+          <div className="flex items-center space-x-2">
+            <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-purple-600 text-white text-xs">
+              <FileText className="w-3 h-3" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="font-medium text-white">{note.title}</span>
+                <span className="font-medium text-white text-sm">{note.title}</span>
                 {note.isFavorite && (
-                  <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                  <Star className="w-3 h-3 text-yellow-500 fill-current" />
                 )}
               </div>
-              <span className="text-sm text-gray-400">{note.category}</span>
+              <span className="text-xs text-gray-400">{note.category}</span>
             </div>
           </div>
         </td>
-        <td className="px-6 py-4 text-gray-300 text-sm">
+        <td className="px-4 py-3 text-gray-300 text-xs">
           <div className="max-w-xs truncate">
             {note.content}
           </div>
         </td>
-        <td className="px-6 py-4 text-gray-400 text-sm">
+        <td className="px-4 py-3 text-gray-400 text-xs">
           {note.updatedAt.toLocaleDateString()}
         </td>
-        <td className="px-6 py-4">
+        <td className="px-4 py-3">
           <div className="flex items-center space-x-2">
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 handleToggleNoteFavorite(note.id);
               }}
-              className={`p-1 rounded transition-colors ${
+              className={`p-0.5 rounded transition-colors ${
                 note.isFavorite
                   ? 'text-yellow-500 hover:text-yellow-400'
                   : 'text-gray-400 hover:text-gray-300'
               }`}
             >
-              <Star className={`w-4 h-4 ${note.isFavorite ? 'fill-current' : ''}`} />
+              <Star className={`w-3 h-3 ${note.isFavorite ? 'fill-current' : ''}`} />
             </button>
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 handleEditNote(note);
               }}
-              className="p-1 text-gray-400 hover:text-gray-300 transition-colors"
+              className="p-0.5 text-gray-400 hover:text-gray-300 transition-colors"
             >
-              <Edit2 className="w-4 h-4" />
+              <Edit2 className="w-3 h-3" />
             </button>
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 handleDeleteNote(note.id);
               }}
-              className="p-1 text-gray-400 hover:text-red-400 transition-colors"
+              className="p-0.5 text-gray-400 hover:text-red-400 transition-colors"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-3 h-3" />
             </button>
           </div>
         </td>
@@ -362,20 +362,20 @@ export const Dashboard: React.FC<DashboardProps> = ({
   return (
     <div className="min-h-screen bg-gray-900 flex">
       {/* Sidebar */}
-      <div className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-gray-800 shadow-lg border-r border-gray-700 flex flex-col transition-all duration-300`}>
+      <div className={`${sidebarCollapsed ? 'w-14' : 'w-56'} bg-gray-800 shadow-lg border-r border-gray-700 flex flex-col transition-all duration-300`}>
         {/* Header */}
-        <div className="p-6 border-b border-gray-700">
+        <div className="p-3 border-b border-gray-700">
           <div className="flex items-center justify-center">
               {!sidebarCollapsed && (
                 <>
-                  <div className="w-10 h-10 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center mr-3">
-                    <span className="text-white font-bold text-sm">VG</span>
+                  <div className="w-8 h-8 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center mr-2">
+                    <span className="text-white font-bold text-xs">VG</span>
                   </div>
-                  <h1 className="text-xl font-bold text-white">VaultGuard</h1>
+                  <h1 className="text-lg font-bold text-white">VaultGuard</h1>
                 </>
               )}
               {sidebarCollapsed && (
-                <div className="w-8 h-8 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center">
+                <div className="w-6 h-6 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center">
                   <span className="text-white font-bold text-xs">VG</span>
                 </div>
               )}
@@ -383,7 +383,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </div>
 
         {/* Tabs */}
-        <div className={`p-4 border-b border-gray-700 ${sidebarCollapsed ? 'px-2' : ''}`}>
+        <div className={`p-2 border-b border-gray-700 ${sidebarCollapsed ? 'px-1' : ''}`}>
           <div className={`flex ${sidebarCollapsed ? 'flex-col space-y-1' : 'space-x-1'} bg-gray-700 rounded-lg p-1`}>
             <button
               onClick={() => {
@@ -391,15 +391,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 setSelectedNote(null);
                 setSelectedPassword(null);
               }}
-              className={`flex-1 flex items-center justify-center ${sidebarCollapsed ? '' : 'space-x-2'} px-3 py-2 rounded-md transition-colors ${
+              className={`flex-1 flex items-center justify-center ${sidebarCollapsed ? '' : 'space-x-2'} px-2 py-1.5 rounded-md transition-colors ${
                 activeTab === 'passwords'
                   ? 'bg-cyan-600 text-white'
                   : 'text-gray-300 hover:text-white hover:bg-gray-600'
               }`}
               title={sidebarCollapsed ? 'Passwords' : ''}
             >
-              <Lock className="w-4 h-4" />
-              {!sidebarCollapsed && <span className="text-sm font-medium">Passwords</span>}
+              <Lock className="w-3 h-3" />
+              {!sidebarCollapsed && <span className="text-xs font-medium">Passwords</span>}
             </button>
             <button
               onClick={() => {
@@ -407,55 +407,55 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 setSelectedPassword(null);
                 setSelectedNote(null);
               }}
-              className={`flex-1 flex items-center justify-center ${sidebarCollapsed ? '' : 'space-x-2'} px-3 py-2 rounded-md transition-colors ${
+              className={`flex-1 flex items-center justify-center ${sidebarCollapsed ? '' : 'space-x-2'} px-2 py-1.5 rounded-md transition-colors ${
                 activeTab === 'notes'
                   ? 'bg-purple-600 text-white'
                   : 'text-gray-300 hover:text-white hover:bg-gray-600'
               }`}
               title={sidebarCollapsed ? 'Notes' : ''}
             >
-              <StickyNote className="w-4 h-4" />
-              {!sidebarCollapsed && <span className="text-sm font-medium">Notes</span>}
+              <StickyNote className="w-3 h-3" />
+              {!sidebarCollapsed && <span className="text-xs font-medium">Notes</span>}
             </button>
           </div>
         </div>
 
         {/* Navigation */}
-        <div className={`flex-1 p-4 ${sidebarCollapsed ? 'px-2' : ''}`}>
-          <div className="space-y-2">
+        <div className={`flex-1 p-2 ${sidebarCollapsed ? 'px-1' : ''}`}>
+          <div className="space-y-1">
             <button
               onClick={() => setSelectedCategory('all')}
-              className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'} ${
+              className={`w-full text-left px-2 py-1.5 rounded-lg transition-colors flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-2'} ${
                 selectedCategory === 'all'
                   ? 'bg-cyan-600/20 text-cyan-400 font-medium'
                   : 'text-gray-300 hover:text-white hover:bg-gray-700'
               }`}
               title={sidebarCollapsed ? 'All Items' : ''}
             >
-              <div className="w-6 h-6 bg-gray-600 rounded flex items-center justify-center">
-                <span className="text-white text-xs font-bold">
+              <div className="w-5 h-5 bg-gray-600 rounded flex items-center justify-center">
+                <span className="text-white text-xs font-bold text-[10px]">
                   {activeTab === 'passwords' ? stats.total : stats.notesCount}
                 </span>
               </div>
-              {!sidebarCollapsed && <span>All Items</span>}
+              {!sidebarCollapsed && <span className="text-sm">All Items</span>}
             </button>
 
             <button
               onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-              className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'} ${
+              className={`w-full text-left px-2 py-1.5 rounded-lg transition-colors flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-2'} ${
                 showFavoritesOnly
                   ? 'bg-yellow-600/20 text-yellow-400 font-medium'
                   : 'text-gray-300 hover:text-white hover:bg-gray-700'
               }`}
               title={sidebarCollapsed ? 'Favorites' : ''}
             >
-              <div className="w-6 h-6 bg-yellow-600 rounded flex items-center justify-center">
-                <Star className="w-3 h-3 text-white fill-current" />
+              <div className="w-5 h-5 bg-yellow-600 rounded flex items-center justify-center">
+                <Star className="w-2.5 h-2.5 text-white fill-current" />
               </div>
               {!sidebarCollapsed && (
                 <>
-                  <span>Favorites</span>
-                  <span className="ml-auto text-sm text-gray-400">
+                  <span className="text-sm">Favorites</span>
+                  <span className="ml-auto text-xs text-gray-400">
                     {activeTab === 'passwords' ? stats.favorites : stats.favoriteNotes}
                   </span>
                 </>
@@ -465,8 +465,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
             {activeTab === 'passwords' && (
               <>
                 {!sidebarCollapsed && (
-                  <div className="pt-4 pb-2">
-                    <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3">Categories</h3>
+                  <div className="pt-2 pb-1">
+                    <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-2">Categories</h3>
                   </div>
                 )}
 
@@ -478,7 +478,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     <button
                       key={category.id}
                       onClick={() => setSelectedCategory(category.id)}
-                      className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'} ${
+                      className={`w-full text-left px-2 py-1.5 rounded-lg transition-colors flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-2'} ${
                         selectedCategory === category.id
                           ? 'bg-cyan-600/20 text-cyan-400 font-medium'
                           : 'text-gray-300 hover:text-white hover:bg-gray-700'
@@ -486,15 +486,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       title={sidebarCollapsed ? category.name : ''}
                     >
                       <div
-                        className="w-6 h-6 rounded flex items-center justify-center text-white"
+                        className="w-5 h-5 rounded flex items-center justify-center text-white"
                         style={{ backgroundColor: category.color }}
                       >
-                        <IconComponent className="w-3 h-3" />
+                        <IconComponent className="w-2.5 h-2.5" />
                       </div>
                       {!sidebarCollapsed && (
                         <>
-                          <span>{category.name}</span>
-                          <span className="ml-auto text-sm text-gray-400">{count}</span>
+                          <span className="text-sm">{category.name}</span>
+                          <span className="ml-auto text-xs text-gray-400">{count}</span>
                         </>
                       )}
                     </button>
@@ -506,21 +506,21 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </div>
 
         {/* Footer */}
-        <div className={`p-4 border-t border-gray-700 ${sidebarCollapsed ? 'px-2' : ''}`}>
+        <div className={`p-2 border-t border-gray-700 ${sidebarCollapsed ? 'px-1' : ''}`}>
           <div className={`flex items-center ${sidebarCollapsed ? 'flex-col space-y-2' : 'justify-between'} mb-3`}>
             <button
               onClick={exportPasswords}
-              className="p-2 text-gray-400 hover:text-gray-300 hover:bg-gray-700 rounded-lg transition-colors"
+              className="p-1.5 text-gray-400 hover:text-gray-300 hover:bg-gray-700 rounded-lg transition-colors"
               title={sidebarCollapsed ? "Export passwords" : "Export passwords"}
             >
-              <Download className="w-5 h-5" />
+              <Download className="w-4 h-4" />
             </button>
             <button
               onClick={onLogout}
-              className="p-2 text-gray-400 hover:text-gray-300 hover:bg-gray-700 rounded-lg transition-colors"
+              className="p-1.5 text-gray-400 hover:text-gray-300 hover:bg-gray-700 rounded-lg transition-colors"
               title={sidebarCollapsed ? "Logout" : "Logout"}
             >
-              <LogOut className="w-5 h-5" />
+              <LogOut className="w-4 h-4" />
             </button>
           </div>
           
@@ -528,13 +528,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <div className="flex justify-center">
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="p-2 text-gray-400 hover:text-gray-300 hover:bg-gray-700 rounded-lg transition-colors"
+              className="p-1.5 text-gray-400 hover:text-gray-300 hover:bg-gray-700 rounded-lg transition-colors"
               title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             >
               {sidebarCollapsed ? (
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className="w-4 h-4" />
               ) : (
-                <ChevronLeft className="w-5 h-5" />
+                <ChevronLeft className="w-4 h-4" />
               )}
             </button>
           </div>
@@ -544,17 +544,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Top Bar */}
-        <div className="bg-gray-800 shadow-sm border-b border-gray-700 p-4">
+        <div className="bg-gray-800 shadow-sm border-b border-gray-700 p-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
                   type="text"
                   placeholder={`Search ${activeTab}...`}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent w-80 bg-gray-700 text-white placeholder-gray-400"
+                  className="pl-8 pr-3 py-1.5 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent w-64 bg-gray-700 text-white placeholder-gray-400 text-sm"
                 />
               </div>
             </div>
@@ -564,23 +564,23 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 <div className="flex items-center bg-gray-700 rounded-lg p-1">
                   <button
                     onClick={() => setViewMode('list')}
-                    className={`p-2 rounded transition-colors ${
+                    className={`p-1.5 rounded transition-colors ${
                       viewMode === 'list'
                         ? 'bg-gray-600 text-cyan-400 shadow-sm'
                         : 'text-gray-400 hover:text-gray-300'
                     }`}
                   >
-                    <List className="w-4 h-4" />
+                    <List className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => setViewMode('grid')}
-                    className={`p-2 rounded transition-colors ${
+                    className={`p-1.5 rounded transition-colors ${
                       viewMode === 'grid'
                         ? 'bg-gray-600 text-cyan-400 shadow-sm'
                         : 'text-gray-400 hover:text-gray-300'
                     }`}
                   >
-                    <Grid className="w-4 h-4" />
+                    <Grid className="w-3.5 h-3.5" />
                   </button>
                 </div>
               )}
@@ -588,13 +588,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <button
                 onClick={() => activeTab === 'passwords' ? setIsModalOpen(true) : setIsNotesModalOpen(true)}
                 disabled={loading}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg transition-colors text-sm ${
                   activeTab === 'passwords'
                     ? 'bg-cyan-600 hover:bg-cyan-700 text-white'
                     : 'bg-purple-600 hover:bg-purple-700 text-white'
                 }`}
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-3.5 h-3.5" />
                 <span>Add {activeTab === 'passwords' ? 'Password' : 'Note'}</span>
               </button>
             </div>
@@ -608,7 +608,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             {loading ? (
               <div className="flex items-center justify-center h-64">
                 <div className="text-center">
-                  <div className="w-8 h-8 border-2 border-cyan-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                  <div className="w-6 h-6 border-2 border-cyan-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
                   <p className="text-gray-400">Loading {activeTab}...</p>
                 </div>
               </div>
@@ -616,18 +616,18 @@ export const Dashboard: React.FC<DashboardProps> = ({
               filteredPasswords.length === 0 ? (
                 <div className="flex items-center justify-center h-64">
                   <div className="text-center">
-                    <Search className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-white mb-2">No passwords found</h3>
-                    <p className="text-gray-400 mb-4">
+                    <Search className="w-10 h-10 text-gray-500 mx-auto mb-3" />
+                    <h3 className="text-base font-medium text-white mb-2">No passwords found</h3>
+                    <p className="text-gray-400 mb-3 text-sm">
                       {searchTerm || selectedCategory !== 'all' || showFavoritesOnly
                         ? "Try adjusting your search or filter criteria."
                         : "Get started by adding your first password."}
                     </p>
                     <button
                       onClick={() => setIsModalOpen(true)}
-                      className="inline-flex items-center space-x-2 px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors"
+                      className="inline-flex items-center space-x-2 px-3 py-1.5 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors text-sm"
                     >
-                      <Plus className="w-4 h-4" />
+                      <Plus className="w-3.5 h-3.5" />
                       <span>Add Password</span>
                     </button>
                   </div>
@@ -637,19 +637,19 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   <table className="w-full">
                     <thead className="bg-gray-800 border-b border-gray-700">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                           Name
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                           Username
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                           Password
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                           Strength
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                           Actions
                         </th>
                       </tr>
@@ -662,6 +662,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
               ) : (
                 <div className="p-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="p-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {filteredPasswords.map((password) => {
                       const category = categories.find(c => c.id === password.category) || categories[0];
                       return (
@@ -684,18 +686,18 @@ export const Dashboard: React.FC<DashboardProps> = ({
               filteredNotes.length === 0 ? (
                 <div className="flex items-center justify-center h-64">
                   <div className="text-center">
-                    <StickyNote className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-white mb-2">No notes found</h3>
-                    <p className="text-gray-400 mb-4">
+                    <StickyNote className="w-10 h-10 text-gray-500 mx-auto mb-3" />
+                    <h3 className="text-base font-medium text-white mb-2">No notes found</h3>
+                    <p className="text-gray-400 mb-3 text-sm">
                       {searchTerm || showFavoritesOnly
                         ? "Try adjusting your search or filter criteria."
                         : "Get started by adding your first note."}
                     </p>
                     <button
                       onClick={() => setIsNotesModalOpen(true)}
-                      className="inline-flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                      className="inline-flex items-center space-x-2 px-3 py-1.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
                     >
-                      <Plus className="w-4 h-4" />
+                      <Plus className="w-3.5 h-3.5" />
                       <span>Add Note</span>
                     </button>
                   </div>
@@ -705,16 +707,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   <table className="w-full">
                     <thead className="bg-gray-800 border-b border-gray-700">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                           Title
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                           Content
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                           Modified
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                           Actions
                         </th>
                       </tr>
@@ -731,10 +733,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
           {/* Details Panel */}
           {((selectedPassword && activeTab === 'passwords' && viewMode === 'list') || 
             (selectedNote && activeTab === 'notes')) && (
-            <div className="w-80 bg-gray-800 border-l border-gray-700 p-6">
-              <div className="space-y-6">
+            <div className="w-72 bg-gray-800 border-l border-gray-700 p-4">
+              <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-white">
+                  <h3 className="text-base font-semibold text-white">
                     {activeTab === 'passwords' ? 'Password Details' : 'Note Details'}
                   </h3>
                   <button
@@ -742,105 +744,105 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       setSelectedPassword(null);
                       setSelectedNote(null);
                     }}
-                    className="p-1 text-gray-400 hover:text-gray-300"
+                    className="p-0.5 text-gray-400 hover:text-gray-300"
                   >
-                    <X className="w-5 h-5" />
+                    <X className="w-4 h-4" />
                   </button>
                 </div>
 
                 {activeTab === 'passwords' && selectedPassword && (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">Title</label>
-                      <p className="text-white">{selectedPassword.title}</p>
+                      <label className="block text-xs font-medium text-gray-300 mb-1">Title</label>
+                      <p className="text-white text-sm">{selectedPassword.title}</p>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">Username</label>
+                      <label className="block text-xs font-medium text-gray-300 mb-1">Username</label>
                       <div className="flex items-center space-x-2">
-                        <p className="text-white font-mono">{selectedPassword.username}</p>
+                        <p className="text-white font-mono text-sm">{selectedPassword.username}</p>
                         <button
                           onClick={() => copyToClipboard(selectedPassword.username, 'detail-username')}
-                          className="p-1 text-gray-400 hover:text-gray-300"
+                          className="p-0.5 text-gray-400 hover:text-gray-300"
                         >
                           {copiedField === 'detail-username' ? (
-                            <Check className="w-4 h-4 text-green-500" />
+                            <Check className="w-3 h-3 text-green-500" />
                           ) : (
-                            <Copy className="w-4 h-4" />
+                            <Copy className="w-3 h-3" />
                           )}
                         </button>
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">Password</label>
+                      <label className="block text-xs font-medium text-gray-300 mb-1">Password</label>
                       <div className="flex items-center space-x-2">
-                        <p className="text-white font-mono">
+                        <p className="text-white font-mono text-sm">
                           {showPasswords[selectedPassword.id] ? selectedPassword.password : '••••••••'}
                         </p>
                         <button
                           onClick={() => togglePasswordVisibility(selectedPassword.id)}
-                          className="p-1 text-gray-400 hover:text-gray-300"
+                          className="p-0.5 text-gray-400 hover:text-gray-300"
                         >
-                          {showPasswords[selectedPassword.id] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          {showPasswords[selectedPassword.id] ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
                         </button>
                         <button
                           onClick={() => copyToClipboard(selectedPassword.password, 'detail-password')}
-                          className="p-1 text-gray-400 hover:text-gray-300"
+                          className="p-0.5 text-gray-400 hover:text-gray-300"
                         >
                           {copiedField === 'detail-password' ? (
-                            <Check className="w-4 h-4 text-green-500" />
+                            <Check className="w-3 h-3 text-green-500" />
                           ) : (
-                            <Copy className="w-4 h-4" />
+                            <Copy className="w-3 h-3" />
                           )}
                         </button>
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">Password Strength</label>
+                      <label className="block text-xs font-medium text-gray-300 mb-1">Password Strength</label>
                       <PasswordStrengthIndicator password={selectedPassword.password} />
                     </div>
 
                     {selectedPassword.url && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-1">Website</label>
+                        <label className="block text-xs font-medium text-gray-300 mb-1">Website</label>
                         <a
                           href={selectedPassword.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-cyan-400 hover:text-cyan-300 hover:underline flex items-center space-x-1"
+                          className="text-cyan-400 hover:text-cyan-300 hover:underline flex items-center space-x-1 text-sm"
                         >
                           <span>{selectedPassword.url}</span>
-                          <ExternalLink className="w-4 h-4" />
+                          <ExternalLink className="w-3 h-3" />
                         </a>
                       </div>
                     )}
 
                     {selectedPassword.notes && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-1">Notes</label>
-                        <p className="text-white text-sm bg-gray-700 p-3 rounded border border-gray-600">{selectedPassword.notes}</p>
+                        <label className="block text-xs font-medium text-gray-300 mb-1">Notes</label>
+                        <p className="text-white text-xs bg-gray-700 p-2 rounded border border-gray-600">{selectedPassword.notes}</p>
                       </div>
                     )}
 
-                    <div className="flex items-center space-x-2 pt-4 border-t border-gray-700">
+                    <div className="flex items-center space-x-2 pt-3 border-t border-gray-700">
                       <button
                         onClick={() => handleEditPassword(selectedPassword)}
-                        className="flex items-center space-x-2 px-3 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors"
+                        className="flex items-center space-x-1 px-2 py-1 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors text-xs"
                       >
-                        <Edit2 className="w-4 h-4" />
+                        <Edit2 className="w-3 h-3" />
                         <span>Edit</span>
                       </button>
                       <button
                         onClick={() => handleToggleFavorite(selectedPassword.id)}
-                        className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+                        className={`flex items-center space-x-1 px-2 py-1 rounded-lg transition-colors text-xs ${
                           selectedPassword.isFavorite
                             ? 'bg-yellow-600/20 text-yellow-400 hover:bg-yellow-600/30'
                             : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                         }`}
                       >
-                        <Star className={`w-4 h-4 ${selectedPassword.isFavorite ? 'fill-current' : ''}`} />
+                        <Star className={`w-3 h-3 ${selectedPassword.isFavorite ? 'fill-current' : ''}`} />
                         <span>{selectedPassword.isFavorite ? 'Unfavorite' : 'Favorite'}</span>
                       </button>
                     </div>
@@ -848,46 +850,46 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 )}
 
                 {activeTab === 'notes' && selectedNote && (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">Title</label>
-                      <p className="text-white">{selectedNote.title}</p>
+                      <label className="block text-xs font-medium text-gray-300 mb-1">Title</label>
+                      <p className="text-white text-sm">{selectedNote.title}</p>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">Category</label>
-                      <p className="text-gray-300">{selectedNote.category}</p>
+                      <label className="block text-xs font-medium text-gray-300 mb-1">Category</label>
+                      <p className="text-gray-300 text-sm">{selectedNote.category}</p>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">Content</label>
-                      <div className="bg-gray-700 p-3 rounded border border-gray-600 max-h-64 overflow-y-auto">
-                        <pre className="text-white text-sm whitespace-pre-wrap">{selectedNote.content}</pre>
+                      <label className="block text-xs font-medium text-gray-300 mb-1">Content</label>
+                      <div className="bg-gray-700 p-2 rounded border border-gray-600 max-h-48 overflow-y-auto">
+                        <pre className="text-white text-xs whitespace-pre-wrap">{selectedNote.content}</pre>
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-1">Last Modified</label>
-                      <p className="text-gray-300 text-sm">{selectedNote.updatedAt.toLocaleString()}</p>
+                      <label className="block text-xs font-medium text-gray-300 mb-1">Last Modified</label>
+                      <p className="text-gray-300 text-xs">{selectedNote.updatedAt.toLocaleString()}</p>
                     </div>
 
-                    <div className="flex items-center space-x-2 pt-4 border-t border-gray-700">
+                    <div className="flex items-center space-x-2 pt-3 border-t border-gray-700">
                       <button
                         onClick={() => handleEditNote(selectedNote)}
-                        className="flex items-center space-x-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                        className="flex items-center space-x-1 px-2 py-1 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-xs"
                       >
-                        <Edit2 className="w-4 h-4" />
+                        <Edit2 className="w-3 h-3" />
                         <span>Edit</span>
                       </button>
                       <button
                         onClick={() => handleToggleNoteFavorite(selectedNote.id)}
-                        className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+                        className={`flex items-center space-x-1 px-2 py-1 rounded-lg transition-colors text-xs ${
                           selectedNote.isFavorite
                             ? 'bg-yellow-600/20 text-yellow-400 hover:bg-yellow-600/30'
                             : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                         }`}
                       >
-                        <Star className={`w-4 h-4 ${selectedNote.isFavorite ? 'fill-current' : ''}`} />
+                        <Star className={`w-3 h-3 ${selectedNote.isFavorite ? 'fill-current' : ''}`} />
                         <span>{selectedNote.isFavorite ? 'Unfavorite' : 'Favorite'}</span>
                       </button>
                     </div>
