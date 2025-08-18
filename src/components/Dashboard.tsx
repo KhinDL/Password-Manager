@@ -473,6 +473,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 setActiveTab('passwords');
                 setSelectedNote(null);
                 setSelectedPassword(null);
+                setSelectedAuth(null);
               }}
               className={`flex-1 flex items-center justify-center ${sidebarCollapsed ? '' : 'space-x-2'} px-2 py-1.5 rounded-md transition-colors ${
                 activeTab === 'passwords'
@@ -489,6 +490,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 setActiveTab('notes');
                 setSelectedPassword(null);
                 setSelectedNote(null);
+                setSelectedAuth(null);
               }}
               className={`flex-1 flex items-center justify-center ${sidebarCollapsed ? '' : 'space-x-2'} px-2 py-1.5 rounded-md transition-colors ${
                 activeTab === 'notes'
@@ -499,6 +501,23 @@ export const Dashboard: React.FC<DashboardProps> = ({
             >
               <StickyNote className="w-3 h-3" />
               {!sidebarCollapsed && <span className="text-xs font-medium">Notes</span>}
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('auth');
+                setSelectedPassword(null);
+                setSelectedNote(null);
+                setSelectedAuth(null);
+              }}
+              className={`flex-1 flex items-center justify-center ${sidebarCollapsed ? '' : 'space-x-2'} px-2 py-1.5 rounded-md transition-colors ${
+                activeTab === 'auth'
+                  ? 'bg-green-600 text-white'
+                  : 'text-gray-300 hover:text-white hover:bg-gray-600'
+              }`}
+              title={sidebarCollapsed ? 'Authentication' : ''}
+            >
+              <Shield className="w-3 h-3" />
+              {!sidebarCollapsed && <span className="text-xs font-medium">Auth</span>}
             </button>
           </div>
         </div>
@@ -517,7 +536,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             >
               <div className="w-5 h-5 bg-gray-600 rounded flex items-center justify-center">
                 <span className="text-white text-xs font-bold text-[10px]">
-                  {activeTab === 'passwords' ? stats.total : stats.notesCount}
+                  {activeTab === 'passwords' ? stats.total : activeTab === 'notes' ? stats.notesCount : stats.authsCount}
                 </span>
               </div>
               {!sidebarCollapsed && <span className="text-sm">All Items</span>}
@@ -539,7 +558,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 <>
                   <span className="text-sm">Favorites</span>
                   <span className="ml-auto text-xs text-gray-400">
-                    {activeTab === 'passwords' ? stats.favorites : stats.favoriteNotes}
+                    {activeTab === 'passwords' ? stats.favorites : activeTab === 'notes' ? stats.favoriteNotes : stats.favoriteAuths}
                   </span>
                 </>
               )}
@@ -669,16 +688,26 @@ export const Dashboard: React.FC<DashboardProps> = ({
               )}
 
               <button
-                onClick={() => activeTab === 'passwords' ? setIsModalOpen(true) : setIsNotesModalOpen(true)}
+                onClick={() => {
+                  if (activeTab === 'passwords') {
+                    setIsModalOpen(true);
+                  } else if (activeTab === 'notes') {
+                    setIsNotesModalOpen(true);
+                  } else {
+                    setIsAuthModalOpen(true);
+                  }
+                }}
                 disabled={loading}
                 className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg transition-colors text-sm ${
-                  activeTab === 'passwords'
+                  activeTab === 'passwords' 
                     ? 'bg-cyan-600 hover:bg-cyan-700 text-white'
-                    : 'bg-purple-600 hover:bg-purple-700 text-white'
+                    : activeTab === 'notes'
+                    ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                    : 'bg-green-600 hover:bg-green-700 text-white'
                 }`}
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Add {activeTab === 'passwords' ? 'Password' : 'Note'}</span>
+                <span>Add {activeTab === 'passwords' ? 'Password' : activeTab === 'notes' ? 'Note' : 'Auth'}</span>
               </button>
             </div>
           </div>
@@ -762,7 +791,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   </div>
                 </div>
               )
-            ) : (
+            ) : activeTab === 'notes' ? (
               // Notes view
               filteredNotes.length === 0 ? (
                 <div className="flex items-center justify-center h-64">
@@ -808,22 +837,73 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   </table>
                 </div>
               )
+            ) : (
+              // Authentication view
+              filteredAuths.length === 0 ? (
+                <div className="flex items-center justify-center h-64">
+                  <div className="text-center">
+                    <Shield className="w-10 h-10 text-gray-500 mx-auto mb-3" />
+                    <h3 className="text-base font-medium text-white mb-2">No authentication entries found</h3>
+                    <p className="text-gray-400 mb-3 text-sm">
+                      {searchTerm || showFavoritesOnly
+                        ? "Try adjusting your search or filter criteria."
+                        : "Get started by adding your first authentication entry."}
+                    </p>
+                    <button
+                      onClick={() => setIsAuthModalOpen(true)}
+                      className="inline-flex items-center space-x-2 px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add Authentication</span>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="overflow-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-800 border-b border-gray-700">
+                      <tr>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Name
+                        </th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Type
+                        </th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Account
+                        </th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Modified
+                        </th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-gray-900 divide-y divide-gray-700">
+                      {filteredAuths.map(renderAuthRow)}
+                    </tbody>
+                  </table>
+                </div>
+              )
             )}
           </div>
 
           {/* Details Panel */}
           {((selectedPassword && activeTab === 'passwords' && viewMode === 'list') || 
-            (selectedNote && activeTab === 'notes')) && (
+            (selectedNote && activeTab === 'notes') ||
+            (selectedAuth && activeTab === 'auth')) && (
             <div className="w-72 bg-gray-800 border-l border-gray-700 p-4">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-base font-semibold text-white">
-                    {activeTab === 'passwords' ? 'Password Details' : 'Note Details'}
+                    {activeTab === 'passwords' ? 'Password Details' : activeTab === 'notes' ? 'Note Details' : 'Authentication Details'}
                   </h3>
                   <button
                     onClick={() => {
                       setSelectedPassword(null);
                       setSelectedNote(null);
+                      setSelectedAuth(null);
                     }}
                     className="p-0.5 text-gray-400 hover:text-gray-300"
                   >
@@ -972,6 +1052,136 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       >
                         <Star className={`w-3 h-3 ${selectedNote.isFavorite ? 'fill-current' : ''}`} />
                         <span>{selectedNote.isFavorite ? 'Unfavorite' : 'Favorite'}</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'auth' && selectedAuth && (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-300 mb-1">Title</label>
+                      <p className="text-white text-sm">{selectedAuth.title}</p>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-gray-300 mb-1">Type</label>
+                      <p className="text-gray-300 text-sm capitalize">{selectedAuth.type.replace('_', ' ')}</p>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-gray-300 mb-1">Category</label>
+                      <p className="text-gray-300 text-sm">{selectedAuth.category}</p>
+                    </div>
+
+                    {selectedAuth.issuer && (
+                      <div>
+                        <label className="block text-xs font-medium text-gray-300 mb-1">Issuer</label>
+                        <p className="text-white text-sm">{selectedAuth.issuer}</p>
+                      </div>
+                    )}
+
+                    {selectedAuth.account && (
+                      <div>
+                        <label className="block text-xs font-medium text-gray-300 mb-1">Account</label>
+                        <p className="text-white text-sm font-mono">{selectedAuth.account}</p>
+                      </div>
+                    )}
+
+                    {selectedAuth.secret && (
+                      <div>
+                        <label className="block text-xs font-medium text-gray-300 mb-1">Secret</label>
+                        <div className="flex items-center space-x-2">
+                          <p className="text-white font-mono text-sm">
+                            {showPasswords[selectedAuth.id] ? selectedAuth.secret : '••••••••••••••••'}
+                          </p>
+                          <button
+                            onClick={() => togglePasswordVisibility(selectedAuth.id)}
+                            className="p-0.5 text-gray-400 hover:text-gray-300"
+                          >
+                            {showPasswords[selectedAuth.id] ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                          </button>
+                          <button
+                            onClick={() => copyToClipboard(selectedAuth.secret!, 'detail-auth-secret')}
+                            className="p-0.5 text-gray-400 hover:text-gray-300"
+                          >
+                            {copiedField === 'detail-auth-secret' ? (
+                              <Check className="w-3 h-3 text-green-500" />
+                            ) : (
+                              <Copy className="w-3 h-3" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedAuth.codes && selectedAuth.codes.length > 0 && (
+                      <div>
+                        <label className="block text-xs font-medium text-gray-300 mb-1">Backup Codes</label>
+                        <div className="bg-gray-700 p-2 rounded border border-gray-600 max-h-32 overflow-y-auto">
+                          {selectedAuth.codes.map((code, index) => (
+                            <div key={index} className="flex items-center justify-between py-1">
+                              <span className="text-white font-mono text-xs">{code}</span>
+                              <button
+                                onClick={() => copyToClipboard(code, `detail-code-${index}`)}
+                                className="p-0.5 text-gray-400 hover:text-gray-300"
+                              >
+                                {copiedField === `detail-code-${index}` ? (
+                                  <Check className="w-3 h-3 text-green-500" />
+                                ) : (
+                                  <Copy className="w-3 h-3" />
+                                )}
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedAuth.questions && selectedAuth.questions.length > 0 && (
+                      <div>
+                        <label className="block text-xs font-medium text-gray-300 mb-1">Security Questions</label>
+                        <div className="bg-gray-700 p-2 rounded border border-gray-600 max-h-32 overflow-y-auto space-y-2">
+                          {selectedAuth.questions.map((qa, index) => (
+                            <div key={index} className="text-xs">
+                              <p className="text-gray-300 mb-1">{qa.question}</p>
+                              <p className="text-white font-mono">{qa.answer}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedAuth.notes && (
+                      <div>
+                        <label className="block text-xs font-medium text-gray-300 mb-1">Notes</label>
+                        <p className="text-white text-xs bg-gray-700 p-2 rounded border border-gray-600">{selectedAuth.notes}</p>
+                      </div>
+                    )}
+
+                    <div>
+                      <label className="block text-xs font-medium text-gray-300 mb-1">Last Modified</label>
+                      <p className="text-gray-300 text-xs">{selectedAuth.updatedAt.toLocaleString()}</p>
+                    </div>
+
+                    <div className="flex items-center space-x-2 pt-3 border-t border-gray-700">
+                      <button
+                        onClick={() => handleEditAuth(selectedAuth)}
+                        className="flex items-center space-x-1 px-2 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs"
+                      >
+                        <Edit2 className="w-3 h-3" />
+                        <span>Edit</span>
+                      </button>
+                      <button
+                        onClick={() => handleToggleAuthFavorite(selectedAuth.id)}
+                        className={`flex items-center space-x-1 px-2 py-1 rounded-lg transition-colors text-xs ${
+                          selectedAuth.isFavorite
+                            ? 'bg-yellow-600/20 text-yellow-400 hover:bg-yellow-600/30'
+                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        }`}
+                      >
+                        <Star className={`w-3 h-3 ${selectedAuth.isFavorite ? 'fill-current' : ''}`} />
+                        <span>{selectedAuth.isFavorite ? 'Unfavorite' : 'Favorite'}</span>
                       </button>
                     </div>
                   </div>
