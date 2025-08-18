@@ -383,7 +383,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </div>
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="p-2 text-gray-400 hover:text-gray-300 hover:bg-gray-700 rounded-lg transition-colors"
+              className="p-2 text-gray-400 hover:text-gray-300 hover:bg-gray-700 rounded-lg transition-colors flex-shrink-0"
+              title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             >
               <Menu className="w-5 h-5" />
             </button>
