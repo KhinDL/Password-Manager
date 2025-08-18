@@ -3,7 +3,8 @@ import { Search, Plus, LogOut, Filter, Download, Upload, Star, Grid, List, Eye, 
 import { PasswordCard } from './PasswordCard';
 import { PasswordModal } from './PasswordModal';
 import { NotesModal } from './NotesModal';
-import { PasswordEntry, Category, Note } from '../types';
+import { AuthModal } from './AuthModal';
+import { PasswordEntry, Category, Note, AuthEntry } from '../types';
 import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
 import * as LucideIcons from 'lucide-react';
 
@@ -31,12 +32,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [editingPassword, setEditingPassword] = useState<PasswordEntry | undefined>();
   const [editingNote, setEditingNote] = useState<Note | undefined>();
+  const [editingAuth, setEditingAuth] = useState<AuthEntry | undefined>();
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
-  const [activeTab, setActiveTab] = useState<'passwords' | 'notes'>('passwords');
+  const [activeTab, setActiveTab] = useState<'passwords' | 'notes' | 'auth'>('passwords');
   const [selectedPassword, setSelectedPassword] = useState<PasswordEntry | null>(null);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+  const [selectedAuth, setSelectedAuth] = useState<AuthEntry | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [showPasswords, setShowPasswords] = useState<{[key: string]: boolean}>({});
   const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -57,6 +61,32 @@ export const Dashboard: React.FC<DashboardProps> = ({
       title: 'WiFi Passwords',
       content: 'Home WiFi: MyNetwork123!\nGuest WiFi: Guest2024\nOffice WiFi: CompanySecure456',
       category: 'Personal',
+      createdAt: new Date('2024-01-10'),
+      updatedAt: new Date('2024-01-12'),
+      isFavorite: false
+    }
+  ]);
+  
+  // Mock auth data - in a real app, this would come from props
+  const [auths, setAuths] = useState<AuthEntry[]>([
+    {
+      id: '1',
+      title: 'Google 2FA',
+      type: 'totp',
+      secret: 'JBSWY3DPEHPK3PXP',
+      issuer: 'Google',
+      account: 'user@gmail.com',
+      category: 'Email',
+      createdAt: new Date('2024-01-15'),
+      updatedAt: new Date('2024-01-15'),
+      isFavorite: true
+    },
+    {
+      id: '2',
+      title: 'GitHub Backup Codes',
+      type: 'backup_codes',
+      codes: ['12345-67890', '09876-54321', '11111-22222'],
+      category: 'Work',
       createdAt: new Date('2024-01-10'),
       updatedAt: new Date('2024-01-12'),
       isFavorite: false
@@ -87,6 +117,18 @@ export const Dashboard: React.FC<DashboardProps> = ({
     });
   }, [notes, searchTerm, showFavoritesOnly]);
 
+  const filteredAuths = useMemo(() => {
+    return auths.filter(auth => {
+      const matchesSearch = auth.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           auth.issuer?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           auth.account?.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesFavorites = !showFavoritesOnly || auth.isFavorite;
+      
+      return matchesSearch && matchesFavorites;
+    });
+  }, [auths, searchTerm, showFavoritesOnly]);
+
   const handleEditPassword = (password: PasswordEntry) => {
     setEditingPassword(password);
     setIsModalOpen(true);
@@ -97,6 +139,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
     setIsNotesModalOpen(true);
   };
 
+  const handleEditAuth = (auth: AuthEntry) => {
+    setEditingAuth(auth);
+    setIsAuthModalOpen(true);
+  };
+
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingPassword(undefined);
@@ -105,6 +152,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const handleCloseNotesModal = () => {
     setIsNotesModalOpen(false);
     setEditingNote(undefined);
+  };
+
+  const handleCloseAuthModal = () => {
+    setIsAuthModalOpen(false);
+    setEditingAuth(undefined);
   };
 
   const handleToggleFavorite = (id: string) => {
@@ -120,6 +172,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
     ));
   };
 
+  const handleToggleAuthFavorite = (id: string) => {
+    setAuths(prev => prev.map(auth => 
+      auth.id === id ? { ...auth, isFavorite: !auth.isFavorite } : auth
+    ));
+  };
+
   const handleSaveNote = (noteData: Omit<Note, 'id' | 'createdAt' | 'updatedAt'>) => {
     const newNote: Note = {
       ...noteData,
@@ -130,9 +188,25 @@ export const Dashboard: React.FC<DashboardProps> = ({
     setNotes(prev => [newNote, ...prev]);
   };
 
+  const handleSaveAuth = (authData: Omit<AuthEntry, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const newAuth: AuthEntry = {
+      ...authData,
+      id: Date.now().toString(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    setAuths(prev => [newAuth, ...prev]);
+  };
+
   const handleUpdateNote = (id: string, updates: Partial<Note>) => {
     setNotes(prev => prev.map(note => 
       note.id === id ? { ...note, ...updates, updatedAt: new Date() } : note
+    ));
+  };
+
+  const handleUpdateAuth = (id: string, updates: Partial<AuthEntry>) => {
+    setAuths(prev => prev.map(auth => 
+      auth.id === id ? { ...auth, ...updates, updatedAt: new Date() } : auth
     ));
   };
 
@@ -140,6 +214,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
     setNotes(prev => prev.filter(note => note.id !== id));
     if (selectedNote?.id === id) {
       setSelectedNote(null);
+    }
+  };
+
+  const handleDeleteAuth = (id: string) => {
+    setAuths(prev => prev.filter(auth => auth.id !== id));
+    if (selectedAuth?.id === id) {
+      setSelectedAuth(null);
     }
   };
 
@@ -177,9 +258,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
     const strong = passwords.filter(p => p.password.length >= 12 && /[A-Z]/.test(p.password) && /[a-z]/.test(p.password) && /\d/.test(p.password) && /[!@#$%^&*(),.?":{}|<>]/.test(p.password)).length;
     const notesCount = notes.length;
     const favoriteNotes = notes.filter(n => n.isFavorite).length;
+    const authsCount = auths.length;
+    const favoriteAuths = auths.filter(a => a.isFavorite).length;
     
-    return { total, favorites, weak, strong, notesCount, favoriteNotes };
-  }, [passwords, notes]);
+    return { total, favorites, weak, strong, notesCount, favoriteNotes, authsCount, favoriteAuths };
+  }, [passwords, notes, auths]);
 
   const renderPasswordRow = (password: PasswordEntry) => {
     const category = categories.find(c => c.id === password.category) || categories[0];
