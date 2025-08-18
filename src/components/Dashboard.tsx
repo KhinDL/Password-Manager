@@ -6,6 +6,8 @@ import { NotesModal } from './NotesModal';
 import { AuthModal } from './AuthModal';
 import { PasswordEntry, Category, Note, AuthEntry } from '../types';
 import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
+import { AIInsights } from './AIInsights';
+import { SmartPasswordGenerator } from './SmartPasswordGenerator';
 import * as LucideIcons from 'lucide-react';
 
 interface DashboardProps {
@@ -44,6 +46,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [showPasswords, setShowPasswords] = useState<{[key: string]: boolean}>({});
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [showAIInsights, setShowAIInsights] = useState(false);
   
   // Mock notes data - in a real app, this would come from props
   const [notes, setNotes] = useState<Note[]>([
@@ -782,6 +785,20 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add {activeTab === 'passwords' ? 'Password' : activeTab === 'notes' ? 'Note' : 'Auth'}</span>
               </button>
+              
+              {activeTab === 'passwords' && (
+                <button
+                  onClick={() => setShowAIInsights(!showAIInsights)}
+                  className={`px-4 py-3 rounded-2xl font-semibold transition-all duration-300 flex items-center gap-2 ${
+                    showAIInsights
+                      ? 'bg-purple-500/20 text-purple-400 border-2 border-purple-500'
+                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600 border-2 border-transparent'
+                  }`}
+                >
+                  <Brain className="w-5 h-5" />
+                  AI Insights
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -789,7 +806,25 @@ export const Dashboard: React.FC<DashboardProps> = ({
         {/* Content Area */}
         <div className="flex-1 flex">
           {/* Main List */}
-          <div className="flex-1 bg-gray-900">
+          <div className={`flex-1 overflow-hidden ${showAIInsights && activeTab === 'passwords' ? 'grid grid-cols-1 lg:grid-cols-3 gap-6' : ''}`}>
+            {/* AI Insights Panel */}
+            {showAIInsights && activeTab === 'passwords' && (
+              <div className="lg:col-span-1 overflow-y-auto">
+                <AIInsights 
+                  passwords={filteredPasswords}
+                  onPasswordSelect={(passwordId) => {
+                    const password = passwords.find(p => p.id === passwordId);
+                    if (password) {
+                      setSelectedPassword(password);
+                    }
+                  }}
+                />
+              </div>
+            )}
+            
+            {/* Main Content Area */}
+            <div className={`${showAIInsights && activeTab === 'passwords' ? 'lg:col-span-2' : ''} overflow-hidden`}>
+            <div className="flex-1 bg-gray-900">
             {loading ? (
               <div className="flex items-center justify-center h-64">
                 <div className="text-center">
@@ -961,6 +996,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               )
             )}
           </div>
+            </div>
 
           {/* Details Panel */}
           {((selectedPassword && activeTab === 'passwords' && viewMode === 'list') || 
@@ -1262,6 +1298,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               </div>
             </div>
           )}
+          </div>
         </div>
       </div>
 
