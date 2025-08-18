@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Plus, LogOut, Filter, Download, Upload, Star, Grid, List, Eye, EyeOff, Copy, Edit2, Trash2, ExternalLink, Check, FileText, StickyNote, Menu, Lock, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Search, Plus, LogOut, Filter, Download, Upload, Star, Grid, List, Eye, EyeOff, Copy, Edit2, Trash2, ExternalLink, Check, FileText, StickyNote, Menu, Lock, ChevronLeft, ChevronRight, X, Shield } from 'lucide-react';
 import { PasswordCard } from './PasswordCard';
 import { PasswordModal } from './PasswordModal';
 import { NotesModal } from './NotesModal';
@@ -431,6 +431,79 @@ export const Dashboard: React.FC<DashboardProps> = ({
               onClick={(e) => {
                 e.stopPropagation();
                 handleDeleteNote(note.id);
+              }}
+              className="p-0.5 text-gray-400 hover:text-red-400 transition-colors"
+            >
+              <Trash2 className="w-3 h-3" />
+            </button>
+          </div>
+        </td>
+      </tr>
+    );
+  };
+
+  const renderAuthRow = (auth: AuthEntry) => {
+    return (
+      <tr 
+        key={auth.id}
+        className={`border-b border-gray-700 hover:bg-gray-700/50 cursor-pointer transition-colors ${
+          selectedAuth?.id === auth.id ? 'bg-gray-700/70' : ''
+        }`}
+        onClick={() => setSelectedAuth(auth)}
+      >
+        <td className="px-4 py-3">
+          <div className="flex items-center space-x-2">
+            <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-green-600 text-white text-xs">
+              <Shield className="w-3 h-3" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <span className="font-medium text-white text-sm">{auth.title}</span>
+                {auth.isFavorite && (
+                  <Star className="w-3 h-3 text-yellow-500 fill-current" />
+                )}
+              </div>
+              <span className="text-xs text-gray-400">{auth.category}</span>
+            </div>
+          </div>
+        </td>
+        <td className="px-4 py-3 text-gray-300 text-xs">
+          <span className="capitalize">{auth.type.replace('_', ' ')}</span>
+        </td>
+        <td className="px-4 py-3 text-gray-300 font-mono text-xs">
+          {auth.account || auth.issuer || '-'}
+        </td>
+        <td className="px-4 py-3 text-gray-400 text-xs">
+          {auth.updatedAt.toLocaleDateString()}
+        </td>
+        <td className="px-4 py-3">
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleToggleAuthFavorite(auth.id);
+              }}
+              className={`p-0.5 rounded transition-colors ${
+                auth.isFavorite
+                  ? 'text-yellow-500 hover:text-yellow-400'
+                  : 'text-gray-400 hover:text-gray-300'
+              }`}
+            >
+              <Star className={`w-3 h-3 ${auth.isFavorite ? 'fill-current' : ''}`} />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEditAuth(auth);
+              }}
+              className="p-0.5 text-gray-400 hover:text-gray-300 transition-colors"
+            >
+              <Edit2 className="w-3 h-3" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteAuth(auth.id);
               }}
               className="p-0.5 text-gray-400 hover:text-red-400 transition-colors"
             >
