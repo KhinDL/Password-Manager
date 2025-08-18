@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Plus, LogOut, Filter, Download, Upload, Star, Grid, List, Eye, EyeOff, Copy, Edit2, Trash2, ExternalLink, Check, FileText, StickyNote } from 'lucide-react';
+import { Search, Plus, LogOut, Filter, Download, Upload, Star, Grid, List, Eye, EyeOff, Copy, Edit2, Trash2, ExternalLink, Check, FileText, StickyNote, Menu, Lock } from 'lucide-react';
 import { PasswordCard } from './PasswordCard';
 import { PasswordModal } from './PasswordModal';
 import { NotesModal } from './NotesModal';
@@ -37,6 +37,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const [activeTab, setActiveTab] = useState<'passwords' | 'notes'>('passwords');
   const [selectedPassword, setSelectedPassword] = useState<PasswordEntry | null>(null);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [showPasswords, setShowPasswords] = useState<{[key: string]: boolean}>({});
   const [copiedField, setCopiedField] = useState<string | null>(null);
   
@@ -361,33 +362,52 @@ export const Dashboard: React.FC<DashboardProps> = ({
   return (
     <div className="min-h-screen bg-gray-900 flex">
       {/* Sidebar */}
-      <div className="w-64 bg-gray-800 shadow-lg border-r border-gray-700 flex flex-col">
+      <div className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-gray-800 shadow-lg border-r border-gray-700 flex flex-col transition-all duration-300`}>
         {/* Header */}
         <div className="p-6 border-b border-gray-700">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">VG</span>
+          <div className="flex items-center justify-between">
+            <div className={`flex items-center space-x-3 ${sidebarCollapsed ? 'justify-center' : ''}`}>
+              {!sidebarCollapsed && (
+                <>
+                  <div className="w-10 h-10 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">VG</span>
+                  </div>
+                  <h1 className="text-xl font-bold text-white">VaultGuard</h1>
+                </>
+              )}
+              {sidebarCollapsed && (
+                <div className="w-8 h-8 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-xs">VG</span>
+                </div>
+              )}
             </div>
-            <h1 className="text-xl font-bold text-white">VaultGuard</h1>
+            <button
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className="p-2 text-gray-400 hover:text-gray-300 hover:bg-gray-700 rounded-lg transition-colors"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="p-4 border-b border-gray-700">
-          <div className="flex space-x-1 bg-gray-700 rounded-lg p-1">
+        <div className={`p-4 border-b border-gray-700 ${sidebarCollapsed ? 'px-2' : ''}`}>
+          <div className={`flex ${sidebarCollapsed ? 'flex-col space-y-1' : 'space-x-1'} bg-gray-700 rounded-lg p-1`}>
             <button
               onClick={() => {
                 setActiveTab('passwords');
                 setSelectedNote(null);
                 setSelectedPassword(null);
               }}
-              className={`flex-1 flex items-center justify-center space-x-2 px-3 py-2 rounded-md transition-colors ${
+              className={`flex-1 flex items-center justify-center ${sidebarCollapsed ? '' : 'space-x-2'} px-3 py-2 rounded-md transition-colors ${
                 activeTab === 'passwords'
                   ? 'bg-cyan-600 text-white'
                   : 'text-gray-300 hover:text-white hover:bg-gray-600'
               }`}
+              title={sidebarCollapsed ? 'Passwords' : ''}
             >
-              <span className="text-sm font-medium">Passwords</span>
+              <Lock className="w-4 h-4" />
+              {!sidebarCollapsed && <span className="text-sm font-medium">Passwords</span>}
             </button>
             <button
               onClick={() => {
@@ -395,58 +415,68 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 setSelectedPassword(null);
                 setSelectedNote(null);
               }}
-              className={`flex-1 flex items-center justify-center space-x-2 px-3 py-2 rounded-md transition-colors ${
+              className={`flex-1 flex items-center justify-center ${sidebarCollapsed ? '' : 'space-x-2'} px-3 py-2 rounded-md transition-colors ${
                 activeTab === 'notes'
                   ? 'bg-purple-600 text-white'
                   : 'text-gray-300 hover:text-white hover:bg-gray-600'
               }`}
+              title={sidebarCollapsed ? 'Notes' : ''}
             >
-              <span className="text-sm font-medium">Notes</span>
+              <StickyNote className="w-4 h-4" />
+              {!sidebarCollapsed && <span className="text-sm font-medium">Notes</span>}
             </button>
           </div>
         </div>
 
         {/* Navigation */}
-        <div className="flex-1 p-4">
+        <div className={`flex-1 p-4 ${sidebarCollapsed ? 'px-2' : ''}`}>
           <div className="space-y-2">
             <button
               onClick={() => setSelectedCategory('all')}
-              className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center space-x-3 ${
+              className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'} ${
                 selectedCategory === 'all'
                   ? 'bg-cyan-600/20 text-cyan-400 font-medium'
                   : 'text-gray-300 hover:text-white hover:bg-gray-700'
               }`}
+              title={sidebarCollapsed ? 'All Items' : ''}
             >
               <div className="w-6 h-6 bg-gray-600 rounded flex items-center justify-center">
                 <span className="text-white text-xs font-bold">
                   {activeTab === 'passwords' ? stats.total : stats.notesCount}
                 </span>
               </div>
-              <span>All Items</span>
+              {!sidebarCollapsed && <span>All Items</span>}
             </button>
 
             <button
               onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-              className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center space-x-3 ${
+              className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'} ${
                 showFavoritesOnly
                   ? 'bg-yellow-600/20 text-yellow-400 font-medium'
                   : 'text-gray-300 hover:text-white hover:bg-gray-700'
               }`}
+              title={sidebarCollapsed ? 'Favorites' : ''}
             >
               <div className="w-6 h-6 bg-yellow-600 rounded flex items-center justify-center">
                 <Star className="w-3 h-3 text-white fill-current" />
               </div>
-              <span>Favorites</span>
-              <span className="ml-auto text-sm text-gray-400">
-                {activeTab === 'passwords' ? stats.favorites : stats.favoriteNotes}
-              </span>
+              {!sidebarCollapsed && (
+                <>
+                  <span>Favorites</span>
+                  <span className="ml-auto text-sm text-gray-400">
+                    {activeTab === 'passwords' ? stats.favorites : stats.favoriteNotes}
+                  </span>
+                </>
+              )}
             </button>
 
             {activeTab === 'passwords' && (
               <>
-                <div className="pt-4 pb-2">
-                  <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3">Categories</h3>
-                </div>
+                {!sidebarCollapsed && (
+                  <div className="pt-4 pb-2">
+                    <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3">Categories</h3>
+                  </div>
+                )}
 
                 {categories.map(category => {
                   const IconComponent = (LucideIcons as any)[category.icon] || LucideIcons.Folder;
@@ -456,11 +486,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     <button
                       key={category.id}
                       onClick={() => setSelectedCategory(category.id)}
-                      className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center space-x-3 ${
+                      className={`w-full text-left px-3 py-2 rounded-lg transition-colors flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'} ${
                         selectedCategory === category.id
                           ? 'bg-cyan-600/20 text-cyan-400 font-medium'
                           : 'text-gray-300 hover:text-white hover:bg-gray-700'
                       }`}
+                      title={sidebarCollapsed ? category.name : ''}
                     >
                       <div
                         className="w-6 h-6 rounded flex items-center justify-center text-white"
@@ -468,8 +499,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       >
                         <IconComponent className="w-3 h-3" />
                       </div>
-                      <span>{category.name}</span>
-                      <span className="ml-auto text-sm text-gray-400">{count}</span>
+                      {!sidebarCollapsed && (
+                        <>
+                          <span>{category.name}</span>
+                          <span className="ml-auto text-sm text-gray-400">{count}</span>
+                        </>
+                      )}
                     </button>
                   );
                 })}
@@ -479,19 +514,19 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-700">
-          <div className="flex items-center justify-between">
+        <div className={`p-4 border-t border-gray-700 ${sidebarCollapsed ? 'px-2' : ''}`}>
+          <div className={`flex items-center ${sidebarCollapsed ? 'flex-col space-y-2' : 'justify-between'}`}>
             <button
               onClick={exportPasswords}
               className="p-2 text-gray-400 hover:text-gray-300 hover:bg-gray-700 rounded-lg transition-colors"
-              title="Export passwords"
+              title={sidebarCollapsed ? "Export passwords" : "Export passwords"}
             >
               <Download className="w-5 h-5" />
             </button>
             <button
               onClick={onLogout}
               className="p-2 text-gray-400 hover:text-gray-300 hover:bg-gray-700 rounded-lg transition-colors"
-              title="Logout"
+              title={sidebarCollapsed ? "Logout" : "Logout"}
             >
               <LogOut className="w-5 h-5" />
             </button>
